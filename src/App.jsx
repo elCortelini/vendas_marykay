@@ -569,20 +569,37 @@ export default function App() {
     }
   };
 
-  // 19. Deletar Vendedora
+  // 19. Deletar Vendedora (Com Confirmação & Sincronização Garantida)
   const handleDeleteConsultant = async (consultantId) => {
-    try {
-      const res = await fetch(`/api/consultants/${consultantId}`, { method: 'DELETE' });
+    const targetConsultant = (data?.consultants || []).find(c => c.id === consultantId || c.email === consultantId);
+    const consultantName = targetConsultant?.name || 'esta vendedora';
 
-      const currentConsultants = (data?.consultants || []).filter(c => c.id !== consultantId);
-      const newData = { ...data, consultants: currentConsultants };
+    if (!window.confirm(`Tem certeza que deseja excluir a vendedora "${consultantName}" da rede?`)) {
+      return;
+    }
+
+    try {
+      try {
+        await fetch(`/api/consultants/${consultantId}`, { method: 'DELETE' });
+      } catch (e) {
+        // Fallback silencioso em ambiente estático GitHub Pages
+      }
+
+      const currentConsultants = (data?.consultants || []).filter(c => c.id !== consultantId && c.email !== consultantId);
+      const newData = { 
+        ...data, 
+        consultants: currentConsultants,
+        consultant: data?.consultant?.id === consultantId ? (currentConsultants[0] || null) : data?.consultant
+      };
+      
       setData(newData);
+      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
       await saveToCloud(newData);
 
-      showToast('Vendedora removida com sucesso.');
-      await fetchData();
+      showToast(`Vendedora "${consultantName}" removida com sucesso.`);
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao excluir vendedora:', err);
+      showToast('Erro ao remover vendedora.');
     }
   };
 
@@ -861,29 +878,6 @@ export default function App() {
           showToast('Sessão encerrada com sucesso!');
         }}
       />
-
-      {/* Botão Flutuante de Login / Logout em Destaque Absoluto */}
-      <button
-        onClick={() => setIsLoginModalOpen(true)}
-        className={`fixed bottom-5 left-5 z-40 px-4 py-2.5 rounded-full shadow-2xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border hover:scale-105 ${
-          currentUser 
-            ? 'bg-gray-900 text-white border-amber-400 hover:bg-black' 
-            : 'bg-white text-[#B76E79] border-[#E899AC] hover:bg-[#FAF7F5]'
-        }`}
-        title="Gerenciar Login e Logout com o Google"
-      >
-        {currentUser ? (
-          <>
-            <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
-            <span>🔑 {currentUser.email?.split('@')[0]} (Sair / Logout)</span>
-          </>
-        ) : (
-          <>
-            <span className="w-2.5 h-2.5 bg-amber-400 rounded-full animate-ping"></span>
-            <span>🔑 Entrar / Login com o Google</span>
-          </>
-        )}
-      </button>
 
       {/* Footer Elegante */}
       <footer className="bg-white border-t border-[#E899AC]/30 py-6 text-center text-xs text-gray-500 mt-12">

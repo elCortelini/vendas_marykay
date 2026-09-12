@@ -136,15 +136,13 @@ app.post('/api/consultants/select', (req, res) => {
 app.delete('/api/consultants/:id', (req, res) => {
   try {
     const db = readDb();
-    if (db.consultants && db.consultants.length > 1) {
-      db.consultants = db.consultants.filter(c => c.id !== req.params.id);
-      if (db.consultant.id === req.params.id) {
-        db.consultant = db.consultants[0];
-      }
-      writeDb(db);
-      return res.json({ success: true, consultants: db.consultants, activeConsultant: db.consultant });
+    if (!db.consultants) db.consultants = [];
+    db.consultants = db.consultants.filter(c => c.id !== req.params.id && c.email !== req.params.id);
+    if (db.consultant && (db.consultant.id === req.params.id || db.consultant.email === req.params.id)) {
+      db.consultant = db.consultants[0] || null;
     }
-    res.status(400).json({ error: 'É necessário ter ao menos 1 vendedora cadastrada no sistema.' });
+    writeDb(db);
+    return res.json({ success: true, consultants: db.consultants, activeConsultant: db.consultant });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao excluir vendedora.' });
   }

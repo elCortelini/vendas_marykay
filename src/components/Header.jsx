@@ -177,28 +177,6 @@ export default function Header({
 
         {/* Abas de Navegação Principal (100% Visíveis Sem Rolagem Lateral) */}
         <nav className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-3 pt-3 border-t border-gray-100">
-          <button
-            onClick={onOpenLoginModal}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
-              currentUser
-                ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-                : 'bg-[#F8E8E8] text-[#B76E79] border-[#E899AC]/40 hover:bg-[#E899AC] hover:text-white'
-            }`}
-            title="Abrir Painel de Autenticação / Login e Logout"
-          >
-            {currentUser ? (
-              <>
-                <LogOut className="w-3.5 h-3.5 text-red-600" />
-                <span>🔴 Sair / Logout ({currentUser.email?.split('@')[0]})</span>
-              </>
-            ) : (
-              <>
-                <LogIn className="w-3.5 h-3.5" />
-                <span>🔑 Login / Entrar (Google)</span>
-              </>
-            )}
-          </button>
-
           {isAdmin && (
             <button
               onClick={() => setActiveTab('admin')}
