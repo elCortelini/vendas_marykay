@@ -100,6 +100,23 @@ app.post('/api/consultants', (req, res) => {
   }
 });
 
+app.post('/api/consultants/approve', (req, res) => {
+  try {
+    const db = readDb();
+    const { consultantId } = req.body;
+    if (!db.consultants) db.consultants = [];
+    const idx = db.consultants.findIndex(c => c.id === consultantId);
+    if (idx !== -1) {
+      db.consultants[idx].status = 'approved';
+      writeDb(db);
+      return res.json({ success: true, consultant: db.consultants[idx], consultants: db.consultants });
+    }
+    res.status(404).json({ error: 'Vendedora não encontrada.' });
+  } catch (error) {
+    res.status(500).json({ error: 'Erro ao aprovar vendedora.' });
+  }
+});
+
 app.post('/api/consultants/select', (req, res) => {
   try {
     const db = readDb();

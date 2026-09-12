@@ -17,6 +17,7 @@ import InventoryManagerView from './components/InventoryManagerView';
 import SalesDashboardView from './components/SalesDashboardView';
 import AdminControlPanel from './components/AdminControlPanel';
 import LoginModal from './components/LoginModal';
+import SelfRegisterModal from './components/SelfRegisterModal';
 import defaultDb from '../server/data/db.json';
 import { subscribeToAuth, logoutUser, isUserAdmin, ADMIN_EMAIL } from './services/firebase';
 import { saveToCloud, fetchFromCloud } from './services/cloudSync';
@@ -33,6 +34,8 @@ export default function App() {
   const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
   const [isKitsModalOpen, setIsKitsModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isSelfRegisterOpen, setIsSelfRegisterOpen] = useState(false);
+  const [pendingGoogleUser, setPendingGoogleUser] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [notification, setNotification] = useState(null);
 
@@ -490,7 +493,7 @@ export default function App() {
     }
   };
 
-  // 17. Salvar Perfil / Cadastrar Vendedora
+  // 17. Salvar / Alterar Perfil de Vendedora
   const handleSaveConsultant = async (consultantData) => {
     try {
       const res = await fetch('/api/consultants', {
@@ -498,13 +501,55 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(consultantData)
       });
-      if (res.ok) {
-        showToast('Perfil da vendedora salvo!');
-        await fetchData();
+
+      // Atualização otimista no estado local e nuvem
+      const currentConsultants = data?.consultants || [];
+      const idx = currentConsultants.findIndex(c => c.id === consultantData.id || (c.email && c.email.toLowerCase() === consultantData.email?.toLowerCase()));
+      let updatedConsultants = [...currentConsultants];
+      if (idx !== -1) {
+        updatedConsultants[idx] = { ...updatedConsultants[idx], ...consultantData };
+      } else {
+        updatedConsultants.push(consultantData);
       }
+
+      const newData = { ...data, consultants: updatedConsultants };
+      setData(newData);
+      await saveToCloud(newData);
+
+      showToast('Perfil da vendedora salvo com sucesso!');
+      await fetchData();
     } catch (err) {
       console.error(err);
     }
+  };
+
+  // 17b. Aprovação 1-Clique de Consultora pelo Admin
+  const handleApproveConsultant = async (consultantId) => {
+    try {
+      await fetch('/api/consultants/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consultantId })
+      });
+
+      const currentConsultants = data?.consultants || [];
+      const updatedConsultants = currentConsultants.map(c => c.id === consultantId ? { ...c, status: 'approved' } : c);
+      const newData = { ...data, consultants: updatedConsultants };
+      setData(newData);
+      await saveToCloud(newData);
+
+      showToast('✅ Consultora aprovada e liberada com sucesso!');
+      await fetchData();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // 17c. Auto-Cadastro no Primeiro Acesso
+  const handleSelfRegistration = async (registrationData) => {
+    await handleSaveConsultant(registrationData);
+    setIsSelfRegisterOpen(false);
+    showToast('⏳ Cadastro enviado! Aguardando aprovação do Administrador Master.');
   };
 
   // 18. Alternar Vendedora Ativa
@@ -528,10 +573,14 @@ export default function App() {
   const handleDeleteConsultant = async (consultantId) => {
     try {
       const res = await fetch(`/api/consultants/${consultantId}`, { method: 'DELETE' });
-      if (res.ok) {
-        showToast('Vendedora removida.');
-        await fetchData();
-      }
+
+      const currentConsultants = (data?.consultants || []).filter(c => c.id !== consultantId);
+      const newData = { ...data, consultants: currentConsultants };
+      setData(newData);
+      await saveToCloud(newData);
+
+      showToast('Vendedora removida com sucesso.');
+      await fetchData();
     } catch (err) {
       console.error(err);
     }
@@ -579,6 +628,26 @@ export default function App() {
         onOpenLoyaltyModal={() => setIsLoyaltyModalOpen(true)}
       />
 
+      {/* Banner Informativo para Consultoras com Cadastro Pendente */}
+      {activeConsultant?.status === 'pending' && !isAdmin && (
+        <div className="bg-amber-500 text-gray-950 p-4 border-b border-amber-600 shadow-md">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">⏳</span>
+              <div>
+                <h4 className="font-extrabold text-sm uppercase tracking-wide">Cadastro Aguardando Liberação do Administrador Master</h4>
+                <p className="text-xs font-semibold text-gray-950/90 mt-0.5">
+                  Seu cadastro inicial de consultora foi enviado e está sob análise do Administrador (elcortelini@gmail.com). Assim que aprovado, seu painel completo estará ativo!
+                </p>
+              </div>
+            </div>
+            <span className="bg-gray-950 text-amber-300 px-3.5 py-1 rounded-full font-black text-xs shrink-0 shadow-sm">
+              Status: Em Análise
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Conteúdo Principal */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === 'admin' && isAdmin && (
@@ -589,6 +658,7 @@ export default function App() {
             carts={data?.carts || []}
             clients={data?.clients || []}
             onSaveConsultant={handleSaveConsultant}
+            onApproveConsultant={handleApproveConsultant}
             onDeleteConsultant={handleDeleteConsultant}
             onSelectConsultantToInspect={(consultantId) => {
               handleSelectConsultant(consultantId);
@@ -773,6 +843,13 @@ export default function App() {
           onAddKitToCart={handleAddKitToCart}
         />
       )}
+
+      <SelfRegisterModal
+        isOpen={isSelfRegisterOpen}
+        googleUser={pendingGoogleUser}
+        onSubmitRegistration={handleSelfRegistration}
+        onClose={() => setIsSelfRegisterOpen(false)}
+      />
 
       <LoginModal
         isOpen={isLoginModalOpen}

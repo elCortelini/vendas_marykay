@@ -70,10 +70,16 @@ export default function Header({
                     elcortelini@gmail.com
                   </span>
                 ) : currentUser ? (
-                  <span className="bg-[#F8E8E8] text-[#B76E79] text-xs font-semibold px-2.5 py-0.5 rounded-full border border-[#E899AC]/40 flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#B76E79]" />
-                    Código {consultant?.code || "NW7527"}
-                  </span>
+                  consultant?.status === 'pending' ? (
+                    <span className="bg-amber-500 text-gray-950 text-xs font-black px-2.5 py-0.5 rounded-full border border-amber-600 flex items-center gap-1 animate-pulse">
+                      ⏳ Aguardando Liberação
+                    </span>
+                  ) : (
+                    <span className="bg-[#F8E8E8] text-[#B76E79] text-xs font-semibold px-2.5 py-0.5 rounded-full border border-[#E899AC]/40 flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#B76E79]" />
+                      Código {consultant?.code || "NW7527"}
+                    </span>
+                  )
                 ) : (
                   <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-gray-200 flex items-center gap-1">
                     🔒 Não Logado

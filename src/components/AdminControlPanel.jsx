@@ -16,7 +16,10 @@ import {
   Lock, 
   Unlock,
   RefreshCw,
-  TrendingUp
+  TrendingUp,
+  Edit2,
+  Clock,
+  Check
 } from 'lucide-react';
 
 export default function AdminControlPanel({ 
@@ -26,13 +29,17 @@ export default function AdminControlPanel({
   carts = [], 
   clients = [],
   onSaveConsultant,
+  onApproveConsultant,
   onDeleteConsultant,
   onSelectConsultantToInspect,
   onUpdateGlobalSettings,
   onSyncCatalog
 }) {
-  const [activeSubTab, setActiveSubTab] = useState('sellers'); // 'sellers', 'settings', 'logs'
+  const [activeSubTab, setActiveSubTab] = useState('sellers'); // 'sellers', 'settings'
+  const [consultantFilter, setConsultantFilter] = useState('all'); // 'all', 'pending', 'approved'
   const [isAddConsultantModalOpen, setIsAddConsultantModalOpen] = useState(false);
+  const [editingConsultant, setEditingConsultant] = useState(null);
+
   const [newConsultantForm, setNewConsultantForm] = useState({
     name: '',
     email: '',
@@ -40,8 +47,11 @@ export default function AdminControlPanel({
     title: 'Consultora de Beleza Independente Mary Kay®',
     region: 'Itajaí e Região',
     phone: '',
-    pixKey: ''
+    pixKey: '',
+    status: 'approved'
   });
+
+  const pendingConsultantsCount = consultants.filter(c => c.status === 'pending').length;
 
   // Métricas Globais da Rede de Vendedoras
   let totalNetworkRevenue = 0;
@@ -59,7 +69,7 @@ export default function AdminControlPanel({
       onSaveConsultant({
         ...newConsultantForm,
         id: `consultant-${Date.now()}`,
-        active: true,
+        status: newConsultantForm.status || 'approved',
         createdAt: new Date().toISOString()
       });
     }
@@ -72,9 +82,25 @@ export default function AdminControlPanel({
       title: 'Consultora de Beleza Independente Mary Kay®',
       region: 'Itajaí e Região',
       phone: '',
-      pixKey: ''
+      pixKey: '',
+      status: 'approved'
     });
   };
+
+  const handleUpdateConsultantSubmit = (e) => {
+    e.preventDefault();
+    if (!editingConsultant) return;
+    if (onSaveConsultant) {
+      onSaveConsultant(editingConsultant);
+    }
+    setEditingConsultant(null);
+  };
+
+  const filteredConsultants = consultants.filter(c => {
+    if (consultantFilter === 'pending') return c.status === 'pending';
+    if (consultantFilter === 'approved') return c.status !== 'pending';
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -98,13 +124,23 @@ export default function AdminControlPanel({
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {pendingConsultantsCount > 0 && (
+              <button
+                onClick={() => { setActiveSubTab('sellers'); setConsultantFilter('pending'); }}
+                className="bg-amber-500 hover:bg-amber-400 text-gray-950 font-black text-xs px-3.5 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2 animate-bounce cursor-pointer border border-amber-300"
+              >
+                <Clock className="w-4 h-4" />
+                <span>⏳ {pendingConsultantsCount} Aguardando Aprovação</span>
+              </button>
+            )}
+
             <button
               onClick={() => setIsAddConsultantModalOpen(true)}
-              className="bg-amber-500 hover:bg-amber-400 text-gray-950 font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer"
+              className="bg-white hover:bg-gray-100 text-gray-950 font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer"
             >
-              <UserPlus className="w-4 h-4" />
-              <span>+ Nova Consultora de Beleza</span>
+              <UserPlus className="w-4 h-4 text-amber-600" />
+              <span>+ Incluir Nova Consultora</span>
             </button>
           </div>
         </div>
@@ -123,7 +159,14 @@ export default function AdminControlPanel({
               <Users className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-gray-900">{consultants.length}</div>
+          <div className="text-2xl font-black text-gray-900 flex items-center gap-2">
+            <span>{consultants.length}</span>
+            {pendingConsultantsCount > 0 && (
+              <span className="text-xs bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full border border-amber-300">
+                {pendingConsultantsCount} pendentes
+              </span>
+            )}
+          </div>
           <p className="text-[10px] text-gray-400">Áreas de vendas ativas</p>
         </div>
 
@@ -174,7 +217,13 @@ export default function AdminControlPanel({
         >
           <Users className="w-4 h-4" />
           <span>👩‍💼 Gerenciar Consultoras de Beleza ({consultants.length})</span>
+          {pendingConsultantsCount > 0 && (
+            <span className="bg-amber-500 text-gray-950 font-extrabold text-[10px] px-2 py-0.2 rounded-full">
+              {pendingConsultantsCount}
+            </span>
+          )}
         </button>
+
         <button
           onClick={() => setActiveSubTab('settings')}
           className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
@@ -190,72 +239,149 @@ export default function AdminControlPanel({
 
       {/* Conteúdo Sub-aba 1: Gerenciar Vendedoras */}
       {activeSubTab === 'sellers' && (
-        <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b pb-3">
+        <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
             <div>
               <h3 className="font-serif-mk text-lg font-bold text-gray-900 flex items-center gap-2">
                 <Users className="w-5 h-5 text-amber-600" />
-                <span>Lista de Vendedoras & Acesso às Áreas de Vendas</span>
+                <span>Lista de Vendedoras & Status da Rede</span>
               </h3>
               <p className="text-xs text-gray-500">
-                Cada vendedora possui sua própria área de vendas isolada. Como administrador, você pode inspecionar e gerenciar qualquer vendedora.
+                Você pode incluir, alterar dados, liberar cadastros pendentes e excluir vendedoras do sistema.
               </p>
+            </div>
+
+            {/* Filtros de Vendedoras */}
+            <div className="flex items-center gap-1.5 bg-[#FAF7F5] p-1 rounded-xl border border-gray-200">
+              <button
+                onClick={() => setConsultantFilter('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  consultantFilter === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-800'
+                }`}
+              >
+                Todas ({consultants.length})
+              </button>
+              <button
+                onClick={() => setConsultantFilter('pending')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  consultantFilter === 'pending' ? 'bg-amber-500 text-gray-950 shadow-sm font-black' : 'text-amber-700 hover:bg-amber-100'
+                }`}
+              >
+                <span>⏳ Pendentes ({pendingConsultantsCount})</span>
+              </button>
+              <button
+                onClick={() => setConsultantFilter('approved')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  consultantFilter === 'approved' ? 'bg-emerald-600 text-white shadow-sm' : 'text-emerald-700 hover:bg-emerald-50'
+                }`}
+              >
+                Aprovadas ({consultants.length - pendingConsultantsCount})
+              </button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {consultants.map(c => (
+            {filteredConsultants.map(c => (
               <div 
                 key={c.id}
-                className="bg-[#FAF7F5] border border-gray-200 rounded-2xl p-5 space-y-4 hover:border-amber-400 transition-all shadow-sm flex flex-col justify-between"
+                className={`border rounded-2xl p-5 space-y-4 transition-all shadow-sm flex flex-col justify-between ${
+                  c.status === 'pending'
+                    ? 'bg-amber-50/60 border-amber-300 ring-2 ring-amber-400/30'
+                    : 'bg-[#FAF7F5] border-gray-200 hover:border-amber-400'
+                }`}
               >
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <img 
-                      src={c.avatar || "/images/tailise_avatar.png"} 
-                      alt={c.name} 
-                      className="w-12 h-12 rounded-full object-cover border-2 border-amber-400 shadow-sm"
-                    />
-                    <div>
-                      <h4 className="font-bold text-gray-900 text-sm flex items-center gap-1.5">
-                        <span>{c.name}</span>
-                        {c.email === 'elcortelini@gmail.com' && (
-                          <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-1.5 py-0.2 rounded-full">
-                            Admin
-                          </span>
-                        )}
-                      </h4>
-                      <p className="text-[11px] text-gray-500">{c.email || "Sem e-mail cadastrado"}</p>
-                      <span className="text-[10px] text-amber-700 font-semibold">Código MK: {c.code || "N/A"}</span>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <img 
+                        src={c.avatar || "https://api.dicebear.com/7.x/initials/svg?seed=" + c.name} 
+                        alt={c.name} 
+                        className="w-12 h-12 rounded-full object-cover border-2 border-amber-400 shadow-sm"
+                      />
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-sm flex items-center gap-1.5">
+                          <span>{c.name}</span>
+                          {c.email === 'elcortelini@gmail.com' && (
+                            <span className="bg-amber-500 text-gray-950 text-[10px] font-black px-2 py-0.2 rounded-full border border-amber-600">
+                              Admin Master
+                            </span>
+                          )}
+                        </h4>
+                        <p className="text-[11px] text-gray-600 font-medium">{c.email || "Sem e-mail"}</p>
+                        <span className="text-[10px] text-amber-800 font-semibold">Código MK: {c.code || "N/A"}</span>
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Status Badge */}
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <span className="text-gray-500 font-medium text-[11px]">Status no Sistema:</span>
+                    {c.status === 'pending' ? (
+                      <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-amber-600 animate-spin" />
+                        Aguardando Liberação
+                      </span>
+                    ) : c.status === 'blocked' ? (
+                      <span className="bg-red-100 text-red-800 border border-red-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                        🔴 Bloqueada
+                      </span>
+                    ) : (
+                      <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        Acesso Liberado
+                      </span>
+                    )}
                   </div>
 
                   <div className="text-xs space-y-1 bg-white p-3 rounded-xl border border-gray-100">
                     <p className="text-gray-600"><strong>Título:</strong> {c.title || "Consultora Mary Kay®"}</p>
                     <p className="text-gray-600"><strong>Região:</strong> {c.region || "Itajaí e Região"}</p>
+                    <p className="text-gray-600"><strong>WhatsApp:</strong> {c.phone || "Não cadastrado"}</p>
                     <p className="text-gray-600"><strong>Chave PIX:</strong> {c.pixKey || "Não cadastrada"}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-2 border-t border-gray-200">
-                  <button
-                    onClick={() => onSelectConsultantToInspect && onSelectConsultantToInspect(c.id)}
-                    className="flex-1 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                    title="Acessar Área de Vendas desta vendedora"
-                  >
-                    <Eye className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Entrar na Área</span>
-                  </button>
-
-                  {c.email !== 'elcortelini@gmail.com' && (
+                <div className="space-y-2 pt-2 border-t border-gray-200">
+                  {/* Botão de Aprovação Rápida se estiver pendente */}
+                  {c.status === 'pending' && (
                     <button
-                      onClick={() => onDeleteConsultant && onDeleteConsultant(c.id)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all cursor-pointer"
-                      title="Excluir Vendedora"
+                      onClick={() => onApproveConsultant && onApproveConsultant(c.id)}
+                      className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black py-2.5 px-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer animate-pulse"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>✅ APROVAR E LIBERAR ACESSO</span>
                     </button>
                   )}
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => onSelectConsultantToInspect && onSelectConsultantToInspect(c.id)}
+                      className="flex-1 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold py-2 px-2.5 rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer"
+                      title="Entrar no painel desta vendedora"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Entrar</span>
+                    </button>
+
+                    <button
+                      onClick={() => setEditingConsultant(c)}
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold py-2 px-2.5 rounded-xl transition-all flex items-center justify-center gap-1 cursor-pointer border border-gray-300"
+                      title="Alterar dados da vendedora"
+                    >
+                      <Edit2 className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Alterar</span>
+                    </button>
+
+                    {c.email !== 'elcortelini@gmail.com' && (
+                      <button
+                        onClick={() => onDeleteConsultant && onDeleteConsultant(c.id)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-all cursor-pointer border border-transparent hover:border-red-200"
+                        title="Excluir Vendedora"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -318,7 +444,7 @@ export default function AdminControlPanel({
             <div className="flex items-center justify-between border-b pb-3">
               <h3 className="font-serif-mk text-lg font-bold text-gray-900 flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-amber-600" />
-                <span>Cadastrar Nova Vendedora no Sistema</span>
+                <span>Incluir Nova Vendedora no Sistema</span>
               </h3>
               <button type="button" onClick={() => setIsAddConsultantModalOpen(false)} className="text-gray-400 hover:text-gray-600">✕</button>
             </div>
@@ -337,7 +463,7 @@ export default function AdminControlPanel({
               </div>
 
               <div>
-                <label className="block font-semibold text-gray-700 mb-1">E-mail do Google *</label>
+                <label className="block font-semibold text-gray-700 mb-1">E-mail do Google (Login) *</label>
                 <input
                   type="email"
                   required
@@ -354,8 +480,8 @@ export default function AdminControlPanel({
                   type="text"
                   placeholder="Ex: NW7527"
                   value={newConsultantForm.code}
-                  onChange={(e) => setNewConsultantForm({ ...newConsultantForm, code: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-amber-500"
+                  onChange={(e) => setNewConsultantForm({ ...newConsultantForm, code: e.target.value.toUpperCase() })}
+                  className="w-full px-3 py-2 border rounded-xl uppercase focus:ring-2 focus:ring-amber-500"
                 />
               </div>
 
@@ -391,6 +517,19 @@ export default function AdminControlPanel({
                   className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-amber-500"
                 />
               </div>
+
+              <div className="sm:col-span-2">
+                <label className="block font-semibold text-gray-700 mb-1">Status da Conta</label>
+                <select
+                  value={newConsultantForm.status}
+                  onChange={(e) => setNewConsultantForm({ ...newConsultantForm, status: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="approved">✅ Aprovada / Liberação Imediata</option>
+                  <option value="pending">⏳ Aguardando Liberação</option>
+                  <option value="blocked">🔴 Bloqueada</option>
+                </select>
+              </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t">
@@ -412,6 +551,115 @@ export default function AdminControlPanel({
         </div>
       )}
 
+      {/* Modal para Alterar / Editar Vendedora Existente */}
+      {editingConsultant && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={handleUpdateConsultantSubmit} className="bg-white w-full max-w-lg p-6 rounded-3xl shadow-2xl space-y-4 border border-amber-500/40">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="font-serif-mk text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Edit2 className="w-5 h-5 text-amber-600" />
+                <span>Alterar Dados da Vendedora</span>
+              </h3>
+              <button type="button" onClick={() => setEditingConsultant(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Nome Completo *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingConsultant.name || ''}
+                  onChange={(e) => setEditingConsultant({ ...editingConsultant, name: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">E-mail do Google (Login) *</label>
+                <input
+                  type="email"
+                  required
+                  value={editingConsultant.email || ''}
+                  onChange={(e) => setEditingConsultant({ ...editingConsultant, email: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Código de Consultora MK</label>
+                <input
+                  type="text"
+                  value={editingConsultant.code || ''}
+                  onChange={(e) => setEditingConsultant({ ...editingConsultant, code: e.target.value.toUpperCase() })}
+                  className="w-full px-3 py-2 border rounded-xl uppercase focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Telefone / WhatsApp</label>
+                <input
+                  type="text"
+                  value={editingConsultant.phone || ''}
+                  onChange={(e) => setEditingConsultant({ ...editingConsultant, phone: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Região de Atendimento</label>
+                <input
+                  type="text"
+                  value={editingConsultant.region || ''}
+                  onChange={(e) => setEditingConsultant({ ...editingConsultant, region: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-gray-700 mb-1">Chave PIX</label>
+                <input
+                  type="text"
+                  value={editingConsultant.pixKey || ''}
+                  onChange={(e) => setEditingConsultant({ ...editingConsultant, pixKey: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block font-semibold text-gray-700 mb-1">Status da Conta</label>
+                <select
+                  value={editingConsultant.status || 'approved'}
+                  onChange={(e) => setEditingConsultant({ ...editingConsultant, status: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-amber-500 font-bold"
+                >
+                  <option value="approved">✅ Aprovada / Liberação Ativa</option>
+                  <option value="pending">⏳ Aguardando Liberação</option>
+                  <option value="blocked">🔴 Bloqueada</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <button
+                type="button"
+                onClick={() => setEditingConsultant(null)}
+                className="px-4 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="bg-amber-500 hover:bg-amber-400 text-gray-950 text-xs font-bold px-5 py-2 rounded-xl shadow-md cursor-pointer"
+              >
+                Salvar Alterações
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
     </div>
   );
 }
+
