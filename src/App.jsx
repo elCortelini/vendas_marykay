@@ -92,6 +92,19 @@ export default function App() {
     return null;
   })();
 
+  // Redirecionamento automático após login conforme o perfil (Admin -> admin, Consultora -> carts)
+  const handleUserLoginRedirect = (user) => {
+    if (!user) return;
+    const email = user.email?.toLowerCase();
+    if (email === ADMIN_EMAIL.toLowerCase()) {
+      setActiveTabState('admin');
+      localStorage.setItem('mk_active_tab', 'admin');
+    } else {
+      setActiveTabState('carts');
+      localStorage.setItem('mk_active_tab', 'carts');
+    }
+  };
+
   // Monitorar Autenticação do Google & Sessão Ativa
   useEffect(() => {
     // 1. Verificar se há sessão salva localmente
@@ -100,9 +113,7 @@ export default function App() {
       try {
         const parsedUser = JSON.parse(savedUser);
         setCurrentUser(parsedUser);
-        if (parsedUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-          setActiveTabState('admin');
-        }
+        handleUserLoginRedirect(parsedUser);
       } catch (e) {}
     }
 
@@ -112,9 +123,7 @@ export default function App() {
         setCurrentUser(user);
         localStorage.setItem('mk_auth_user', JSON.stringify(user));
         showToast(`Bem-vinda(o), ${user.displayName || user.email}!`);
-        if (user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-          setActiveTabState('admin');
-        }
+        handleUserLoginRedirect(user);
       }
     });
     return () => unsubscribe();
@@ -881,7 +890,10 @@ export default function App() {
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
         currentUser={currentUser}
-        onLoginSuccess={() => showToast('Login com o Google realizado com sucesso!')}
+        onLoginSuccess={(loggedUser) => {
+          showToast('Login com o Google realizado com sucesso!');
+          handleUserLoginRedirect(loggedUser);
+        }}
         onLogoutSuccess={async () => {
           await logoutUser();
           showToast('Sessão encerrada com sucesso!');
