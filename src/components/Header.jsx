@@ -22,7 +22,9 @@ export default function Header({
         <span>
           {isAdmin 
             ? "🛡️ MODO ADMINISTRADOR MASTER • Gestão Geral da Rede Mary Kay® (elcortelini@gmail.com)" 
-            : `Atendimento Personalizado Mary Kay® • Consultora ${consultant?.name || "Tailise"} (${consultant?.region || "Itajaí e Região"})`}
+            : currentUser
+              ? `Atendimento Personalizado Mary Kay® • Consultora ${consultant?.name || currentUser?.displayName || "Mary Kay®"} (${consultant?.region || "Itajaí e Região"})`
+              : "✨ Portal de Atendimento Mary Kay® • Faça Login com o Google para Acessar ✨"}
         </span>
         <Sparkles className="w-3.5 h-3.5 animate-pulse" />
       </div>
@@ -30,43 +32,63 @@ export default function Header({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           
-          {/* Perfil Ativo (Administrador Master vs Vendedora) */}
+          {/* Perfil Ativo (Administrador Master vs Vendedora vs Visitante) */}
           <div
-            onClick={() => setActiveTab(isAdmin ? 'admin' : 'settings')}
+            onClick={() => setActiveTab(isAdmin ? 'admin' : currentUser ? 'settings' : 'carts')}
             className="flex items-center gap-4 cursor-pointer group p-1.5 rounded-2xl hover:bg-[#F8E8E8]/50 transition-all"
-            title={isAdmin ? "Clique para acessar a Área do Administrador Master" : "Clique para Editar Perfil da Vendedora"}
+            title={isAdmin ? "Clique para acessar a Área do Administrador Master" : currentUser ? "Clique para Editar Perfil da Consultora" : "Faça Login"}
           >
             <div className="relative">
-              <div className={`w-14 h-14 rounded-full p-0.5 ${isAdmin ? 'bg-amber-500' : 'mk-gold-gradient'} shadow-md transition-transform group-hover:scale-105`}>
+              <div className={`w-14 h-14 rounded-full p-0.5 ${isAdmin ? 'bg-amber-500' : currentUser ? 'mk-gold-gradient' : 'bg-gray-300'} shadow-md transition-transform group-hover:scale-105`}>
                 <img 
-                  src={isAdmin ? (currentUser?.photoURL || "/images/tailise_avatar.png") : (consultant?.avatar || "/images/tailise_avatar.png")} 
-                  alt={isAdmin ? "Administrador Master" : (consultant?.name || "Consultora Tailise")} 
-                  className="w-full h-full object-cover rounded-full border-2 border-white"
+                  src={
+                    isAdmin 
+                      ? (currentUser?.photoURL || "https://api.dicebear.com/7.x/bottts/svg?seed=elcortelini") 
+                      : currentUser 
+                        ? (consultant?.avatar || currentUser?.photoURL || "/images/tailise_avatar.png") 
+                        : "https://api.dicebear.com/7.x/initials/svg?seed=MaryKay"
+                  } 
+                  alt={isAdmin ? "Administrador Master" : (consultant?.name || "Consultora Mary Kay®")} 
+                  className="w-full h-full object-cover rounded-full border-2 border-white bg-white"
                 />
               </div>
-              <span className={`absolute bottom-0 right-0 w-4 h-4 ${isAdmin ? 'bg-amber-400' : 'bg-emerald-500'} border-2 border-white rounded-full`} title="Status da Conta"></span>
+              <span className={`absolute bottom-0 right-0 w-4 h-4 ${isAdmin ? 'bg-amber-400' : currentUser ? 'bg-emerald-500' : 'bg-gray-400'} border-2 border-white rounded-full`} title="Status da Conta"></span>
             </div>
 
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold font-serif-mk text-gray-900 tracking-tight group-hover:text-[#B76E79] transition-colors">
-                  {isAdmin ? "Administrador Master" : (consultant?.name || "Tailise")}
+                  {isAdmin 
+                    ? "Administrador Master" 
+                    : currentUser 
+                      ? (consultant?.name || currentUser?.displayName || "Consultora Mary Kay®") 
+                      : "Consultora Mary Kay®"}
                 </h1>
                 {isAdmin ? (
                   <span className="bg-amber-500 text-gray-950 text-xs font-black px-2.5 py-0.5 rounded-full shadow-sm border border-amber-600 flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-gray-950" />
                     elcortelini@gmail.com
                   </span>
-                ) : (
+                ) : currentUser ? (
                   <span className="bg-[#F8E8E8] text-[#B76E79] text-xs font-semibold px-2.5 py-0.5 rounded-full border border-[#E899AC]/40 flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-[#B76E79]" />
                     Código {consultant?.code || "NW7527"}
                   </span>
+                ) : (
+                  <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-gray-200 flex items-center gap-1">
+                    🔒 Não Logado
+                  </span>
                 )}
               </div>
               <p className="text-xs text-gray-600 font-medium flex items-center gap-2 mt-0.5">
-                <span>{isAdmin ? "Gestão de Vendedoras, Catálogo & Permissões da Rede" : (consultant?.title || "Consultora de Beleza Independente Mary Kay®")}</span>
-                {!isAdmin && (
+                <span>
+                  {isAdmin 
+                    ? "Gestão de Vendedoras, Catálogo & Permissões da Rede" 
+                    : currentUser 
+                      ? (consultant?.title || "Consultora de Beleza Independente Mary Kay®") 
+                      : "Faça login com sua conta do Google para acessar"}
+                </span>
+                {!isAdmin && currentUser && (
                   <>
                     <span className="inline-block w-1 h-1 bg-gray-300 rounded-full"></span>
                     <span className="text-[#B76E79] flex items-center gap-0.5">

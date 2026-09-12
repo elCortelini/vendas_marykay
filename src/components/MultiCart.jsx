@@ -358,7 +358,7 @@ export default function MultiCart({
               <div className="flex items-center justify-between border-b border-gray-800 pb-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-[#E899AC] flex items-center gap-1.5">
                   <Calculator className="w-4 h-4" />
-                  <span>Calculadora de Lucro da Consultora Tailise</span>
+                  <span>Calculadora de Lucro das Vendas</span>
                 </h4>
                 <span className="text-[10px] bg-emerald-950 text-emerald-400 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-800">
                   Desconto MK 40%

@@ -38,6 +38,56 @@ export default function App() {
 
   const isAdmin = isUserAdmin(currentUser);
 
+  // Determinar o Perfil da Consultora Ativa com base no Usuário Logado
+  const activeConsultant = (() => {
+    if (isAdmin) {
+      return {
+        id: 'admin-master',
+        name: currentUser?.displayName || 'elCortelini',
+        email: ADMIN_EMAIL,
+        title: 'Administrador Master do Sistema',
+        region: 'Rede Geral Mary Kay®',
+        code: 'ADMIN-01',
+        avatar: currentUser?.photoURL || 'https://api.dicebear.com/7.x/bottts/svg?seed=elcortelini'
+      };
+    }
+
+    if (currentUser) {
+      const email = currentUser.email?.toLowerCase();
+      // 1. Procurar nas consultoras cadastradas pelo e-mail
+      const foundInList = (data?.consultants || []).find(c => c.email?.toLowerCase() === email);
+      if (foundInList) return foundInList;
+
+      // 2. Se for o e-mail oficial da Tailise
+      if (email === 'tailiseroza@gmail.com') {
+        return data?.consultant || {
+          id: 'consultant-tailise',
+          name: 'Tailise',
+          email: 'tailiseroza@gmail.com',
+          title: 'Consultora de Beleza Independente Mary Kay®',
+          region: 'Itajaí e região',
+          code: 'NW7527',
+          phone: '(47) 99999-8888',
+          pixKey: '47999998888',
+          avatar: '/images/tailise_avatar.png'
+        };
+      }
+
+      // 3. Consultora genérica conectada via Google
+      return {
+        name: currentUser.displayName || currentUser.email.split('@')[0],
+        email: currentUser.email,
+        title: 'Consultora de Beleza Independente Mary Kay®',
+        region: 'Itajaí e Região',
+        code: 'MK-CONSULTORA',
+        avatar: currentUser.photoURL || '/images/tailise_avatar.png'
+      };
+    }
+
+    // Se ninguém estiver logado (Visitante)
+    return null;
+  })();
+
   // Monitorar Autenticação do Google & Sessão Ativa
   useEffect(() => {
     // 1. Verificar se há sessão salva localmente
@@ -508,7 +558,7 @@ export default function App() {
       )}
 
       <Header
-        consultant={data?.consultant}
+        consultant={activeConsultant}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onSyncCatalog={handleSyncCatalog}
@@ -661,12 +711,12 @@ export default function App() {
         )}
 
         {activeTab === 'calculator' && (
-          <ConsultantCalculator consultant={data?.consultant} />
+          <ConsultantCalculator consultant={activeConsultant} />
         )}
 
         {activeTab === 'settings' && (
           <SettingsPanel
-            consultant={data?.consultant}
+            consultant={activeConsultant}
             consultants={data?.consultants || [data?.consultant]}
             settings={data?.settings}
             products={data?.products || []}
@@ -683,7 +733,7 @@ export default function App() {
       {quoteModalCart && (
         <ClientQuoteModal
           cart={quoteModalCart}
-          consultant={data?.consultant}
+          consultant={activeConsultant}
           client={data?.clients?.find(c => c.id === quoteModalCart.clientId)}
           onClose={() => setQuoteModalCart(null)}
         />
@@ -692,7 +742,7 @@ export default function App() {
       {isConsolidatorOpen && (
         <ConsolidatorModal
           carts={data?.carts || []}
-          consultant={data?.consultant}
+          consultant={activeConsultant}
           onClose={() => setIsConsolidatorOpen(false)}
           onExportOfficialCart={handleExportOfficialCart}
         />
@@ -701,7 +751,7 @@ export default function App() {
       {isFlyerModalOpen && (
         <MarketingFlyerModal
           products={data?.products || []}
-          consultant={data?.consultant}
+          consultant={activeConsultant}
           onClose={() => setIsFlyerModalOpen(false)}
         />
       )}

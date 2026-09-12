@@ -6,7 +6,7 @@ export default function MarketingFlyerModal({ isOpen, onClose, products, consult
   const [selectedProductIds, setSelectedProductIds] = useState(() => {
     return products.slice(0, 4).map(p => p.id);
   });
-  const [flyerTitle, setFlyerTitle] = useState('Queridinhos da Semana Tailise Mary Kay®');
+  const [flyerTitle, setFlyerTitle] = useState(`Queridinhos da Semana ${consultant?.name || 'Mary Kay®'}`);
   const [flyerSubtitle, setFlyerSubtitle] = useState('Edição Especial Itajaí e Região • Pronta-Entrega!');
   const [customBadgeText, setCustomBadgeText] = useState('Ofertas Imperdíveis');
   const [flyerProductSearch, setFlyerProductSearch] = useState('');
@@ -46,7 +46,7 @@ export default function MarketingFlyerModal({ isOpen, onClose, products, consult
   };
 
   const handleShareWhatsapp = () => {
-    let msg = `✨ *${flyerTitle}* ✨\n_${flyerSubtitle}_\n\n💖 *Confira os destaques da semana da Consultora Tailise:*\n\n`;
+    let msg = `✨ *${flyerTitle}* ✨\n_${flyerSubtitle}_\n\n💖 *Confira os destaques da semana da Consultora ${consultant?.name || 'Mary Kay®'}:*\n\n`;
     selectedProducts.forEach(p => {
       msg += `• *${p.name}*: R$ ${p.price.toFixed(2)}\n`;
     });

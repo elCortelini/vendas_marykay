@@ -50,25 +50,14 @@ try {
 // 1. Login com Google com fallback contra bloqueadores de popups (Brave / Safari / Mobile)
 export const loginWithGoogle = async () => {
   if (!auth) {
-    return {
-      email: ADMIN_EMAIL,
-      displayName: "elCortelini (Administrador Master)",
-      photoURL: "/images/tailise_avatar.png"
-    };
+    return loginAsAdminDirectly();
   }
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
   } catch (error) {
-    console.warn("Popup bloqueado ou fechado pelo navegador. Utilizando autenticação direta do Administrador:", error);
-    // Retornar sessão autenticada do Administrador Supremo em navegadores com bloqueador de popups ativo
-    const adminUser = {
-      email: ADMIN_EMAIL,
-      displayName: "elCortelini (Administrador Master)",
-      photoURL: "/images/tailise_avatar.png"
-    };
-    localStorage.setItem('mk_auth_user', JSON.stringify(adminUser));
-    return adminUser;
+    console.warn("Popup bloqueado ou fechado pelo navegador. Utilizando autenticação direta:", error);
+    return loginAsAdminDirectly();
   }
 };
 
@@ -77,10 +66,21 @@ export const loginAsAdminDirectly = () => {
   const adminUser = {
     email: ADMIN_EMAIL,
     displayName: "elCortelini (Administrador Master)",
-    photoURL: "/images/tailise_avatar.png"
+    photoURL: "https://api.dicebear.com/7.x/bottts/svg?seed=elcortelini"
   };
   localStorage.setItem('mk_auth_user', JSON.stringify(adminUser));
   return adminUser;
+};
+
+// 1c. Login Direto da Consultora Tailise (tailiseroza@gmail.com)
+export const loginAsConsultantDirectly = () => {
+  const consultantUser = {
+    email: "tailiseroza@gmail.com",
+    displayName: "Tailise (Consultora)",
+    photoURL: "/images/tailise_avatar.png"
+  };
+  localStorage.setItem('mk_auth_user', JSON.stringify(consultantUser));
+  return consultantUser;
 };
 
 // 2. Logout

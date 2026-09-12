@@ -16,13 +16,13 @@ export default function ConsultantCalculator({ consultant }) {
       <div className="bg-white p-6 rounded-2xl border border-[#E899AC]/30 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <img
-            src={consultant?.avatar || "/images/tailise_avatar.png"}
-            alt="Consultora Tailise"
+            src={consultant?.avatar || "https://api.dicebear.com/7.x/initials/svg?seed=MaryKay"}
+            alt={`Consultora ${consultant?.name || "Mary Kay®"}`}
             className="w-16 h-16 rounded-full object-cover border-2 border-[#E899AC] shadow-md"
           />
           <div>
             <h2 className="text-xl font-bold font-serif-mk text-gray-900">
-              Painel de Gestão da Consultora {consultant?.name || "Tailise"}
+              Painel de Gestão da Consultora {consultant?.name || "Mary Kay®"}
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
               Simulações financeiras, cálculo de retorno sobre vendas e estratégias de atendimento para {consultant?.region || "Itajaí e região"}.

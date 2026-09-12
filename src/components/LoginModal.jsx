@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sparkles, ShieldCheck, Lock, LogIn, LogOut, CheckCircle2, Award, UserCheck } from 'lucide-react';
-import { loginWithGoogle, logoutUser, ADMIN_EMAIL } from '../services/firebase';
+import { loginWithGoogle, logoutUser, ADMIN_EMAIL, loginAsAdminDirectly, loginAsConsultantDirectly } from '../services/firebase';
 
 export default function LoginModal({ isOpen, onClose, currentUser, onLoginSuccess, onLogoutSuccess }) {
   if (!isOpen) return null;
@@ -114,27 +114,36 @@ export default function LoginModal({ isOpen, onClose, currentUser, onLoginSucces
               <span>🔑 Entrar com o Google (Popup)</span>
             </button>
 
-            {/* Botão de Entrada Direta sem Bloqueador de Popups */}
-            <button
-              onClick={() => {
-                const adminUser = {
-                  email: ADMIN_EMAIL,
-                  displayName: "elCortelini (Administrador Master)",
-                  photoURL: "/images/tailise_avatar.png"
-                };
-                localStorage.setItem('mk_auth_user', JSON.stringify(adminUser));
-                if (onLoginSuccess) onLoginSuccess(adminUser);
-                onClose();
-              }}
-              className="w-full bg-amber-500 hover:bg-amber-400 text-gray-950 font-bold py-3.5 px-4 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 text-xs cursor-pointer border border-amber-600"
-            >
-              <ShieldCheck className="w-4 h-4 text-gray-950" />
-              <span>🛡️ Entrar com 1-Clique como Admin (elcortelini@gmail.com)</span>
-            </button>
+            {/* Botões de Entrada Direta 1-Clique */}
+            <div className="grid grid-cols-1 gap-2 pt-1">
+              <button
+                onClick={() => {
+                  const consultantUser = loginAsConsultantDirectly();
+                  if (onLoginSuccess) onLoginSuccess(consultantUser);
+                  onClose();
+                }}
+                className="w-full bg-[#F8E8E8] hover:bg-[#E899AC] text-[#B76E79] hover:text-white font-bold py-3 px-4 rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 text-xs cursor-pointer border border-[#E899AC]/40"
+              >
+                <UserCheck className="w-4 h-4" />
+                <span>👩‍💼 Entrar como Consultora Tailise (tailiseroza@gmail.com)</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const adminUser = loginAsAdminDirectly();
+                  if (onLoginSuccess) onLoginSuccess(adminUser);
+                  onClose();
+                }}
+                className="w-full bg-amber-500 hover:bg-amber-400 text-gray-950 font-bold py-3 px-4 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 text-xs cursor-pointer border border-amber-600"
+              >
+                <ShieldCheck className="w-4 h-4 text-gray-950" />
+                <span>🛡️ Entrar como Admin (elcortelini@gmail.com)</span>
+              </button>
+            </div>
 
             <button
               onClick={onClose}
-              className="text-xs text-gray-400 hover:text-gray-600 underline cursor-pointer"
+              className="text-xs text-gray-400 hover:text-gray-600 underline cursor-pointer pt-2"
             >
               Continuar no Modo Visitante
             </button>

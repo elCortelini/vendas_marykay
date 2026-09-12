@@ -1,6 +1,8 @@
 {
   "consultant": {
+    "id": "consultant-tailise",
     "name": "Tailise",
+    "email": "tailiseroza@gmail.com",
     "title": "Consultora de Beleza Independente Mary Kay®",
     "region": "Itajaí e região",
     "code": "NW7527",
@@ -9,6 +11,20 @@
     "avatar": "/images/tailise_avatar.png",
     "bio": "Dicas de beleza, produtos à pronta-entrega, novidades e montagem de encomendinhas especiais!"
   },
+  "consultants": [
+    {
+      "id": "consultant-tailise",
+      "name": "Tailise",
+      "email": "tailiseroza@gmail.com",
+      "title": "Consultora de Beleza Independente Mary Kay®",
+      "region": "Itajaí e região",
+      "code": "NW7527",
+      "phone": "(47) 99999-8888",
+      "pixKey": "47999998888",
+      "avatar": "/images/tailise_avatar.png",
+      "bio": "Dicas de beleza, produtos à pronta-entrega, novidades e montagem de encomendinhas especiais!"
+    }
+  ],
   "settings": {
     "defaultDiscount": 40,
     "packagingCost": 5,

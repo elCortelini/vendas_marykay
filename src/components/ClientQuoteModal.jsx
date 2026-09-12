@@ -36,7 +36,7 @@ export default function ClientQuoteModal({ cart, consultant, client, onClose }) 
   // Texto formatado para o WhatsApp da cliente
   const generateWhatsAppText = () => {
     let msg = `✨ *ORÇAMENTO DE LUXO MARY KAY®*\n`;
-    msg += `💖 *Consultora:* ${consultant?.name || "Tailise"} (${consultant?.region || "Itajaí e região"})\n`;
+    msg += `💖 *Consultora:* ${consultant?.name || "Mary Kay®"} (${consultant?.region || "Itajaí e região"})\n`;
     msg += `👤 *Cliente:* ${cart.clientName}\n`;
     if (client?.street || client?.city) {
       msg += `📍 *Entrega:* ${client.street || ''} ${client.number || ''} ${client.neighborhood ? `- ${client.neighborhood}` : ''} (${client.city || 'Itajaí'})\n`;
@@ -408,7 +408,7 @@ export default function ClientQuoteModal({ cart, consultant, client, onClose }) 
                   {consultant?.pixKey || "(47) 99999-8888"}
                 </p>
                 <p className="text-gray-500 text-[9px]">
-                  Favorecido: {consultant?.name || "Tailise"}
+                  Favorecido: {consultant?.name || "Consultora Mary Kay®"}
                 </p>
               </div>
             </div>
@@ -419,7 +419,7 @@ export default function ClientQuoteModal({ cart, consultant, client, onClose }) 
                 Obrigada por escolher a Mary Kay®! ✨
               </p>
               <p className="text-[10px] text-gray-400">
-                Sua beleza é nossa paixão. Dúvidas? Fale direto com sua consultora Tailise.
+                Sua beleza é nossa paixão. Dúvidas? Fale direto com sua consultora {consultant?.name || "Mary Kay®"}.
               </p>
             </div>
           </div>

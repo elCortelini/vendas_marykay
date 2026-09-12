@@ -177,7 +177,7 @@ export default function KitsManagerModal({ isOpen, onClose, onAddKitToCart }) {
           <div>
             <h4 className="font-bold text-xs text-gray-900 flex items-center gap-1.5">
               <Sparkles className="w-4 h-4 text-[#B76E79]" />
-              <span>Dica de Vendas da Consultora Tailise</span>
+              <span>Dica de Vendas Mary Kay®</span>
             </h4>
             <p className="text-[11px] text-gray-600 mt-0.5">
               Kits possuem maior ticket médio e alta conversão para presentear em datas comemorativas!

@@ -331,7 +331,7 @@ export default function SalesDashboardView({ products = [], clients = [], carts 
                 <span>Top Produtos Mais Vendidos & Lucrativos</span>
               </h3>
               <p className="text-xs text-gray-500">
-                Classificação dos itens com maior receita gerada para a Consultora Tailise.
+                Classificação dos itens com maior receita gerada para sua consultoria.
               </p>
             </div>
 

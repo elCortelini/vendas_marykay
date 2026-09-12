@@ -73,7 +73,7 @@ export default function FinancialDashboard({ products, carts, clients, payments,
         <div>
           <h2 className="text-xl font-bold font-serif-mk text-gray-900 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-[#B76E79]" />
-            <span>Gestão Financeira & DRE da Consultora Tailise</span>
+            <span>Gestão Financeira & DRE de Vendas Mary Kay®</span>
           </h2>
           <p className="text-xs text-gray-500 mt-1">
             Resumo de faturamento, lucro líquido real, saúde do seu estoque e controle de contas a receber.
