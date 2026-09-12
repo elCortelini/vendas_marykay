@@ -97,15 +97,15 @@ export default function SettingsPanel({
         <div>
           <h2 className="text-xl font-bold font-serif-mk text-gray-900 flex items-center gap-2">
             <Settings className="w-5 h-5 text-[#B76E79]" />
-            <span>Configurações do Perfil, Vendedoras & Acessos Mary Kay®</span>
+            <span>Perfil da Consultora de Beleza & Configurações Mary Kay®</span>
           </h2>
           <p className="text-xs text-gray-500 mt-1">
-            Cadastre e edite os dados das vendedoras/consultoras, chave PIX, foto, logins de acesso oficial e tabela de frete!
+            Cadastre e edite os dados das consultoras de beleza, chave PIX, foto, logins oficiais e tabela de frete!
           </p>
         </div>
       </div>
 
-      {/* 1. Módulo de Vendedoras / Consultoras */}
+      {/* 1. Módulo de Perfil da Consultora de Beleza Ativa */}
       <div className="bg-white p-6 rounded-3xl border border-[#E899AC]/40 shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4">
           <div className="flex items-center gap-3">
@@ -114,7 +114,7 @@ export default function SettingsPanel({
             </div>
             <div>
               <h3 className="font-serif-mk text-base font-bold text-gray-900 flex items-center gap-2">
-                <span>Vendedora Ativa: {consultantForm.name || "Tailise"}</span>
+                <span>Consultora Ativa: {consultantForm.name || "Tailise"}</span>
                 <span className="bg-[#F8E8E8] text-[#B76E79] text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-[#E899AC]/40">
                   Cód: {consultantForm.code || "NW7527"}
                 </span>
@@ -127,35 +127,47 @@ export default function SettingsPanel({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => {
-                setConsultantForm({
-                  id: 'c-' + Date.now(),
-                  name: '',
-                  title: 'Consultora de Beleza Independente Mary Kay®',
-                  region: 'Itajaí e região',
-                  code: '',
-                  phone: '',
-                  pixKey: '',
-                  avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
-                  loginMaryKay: '',
-                  passwordMaryKay: ''
-                });
-                setIsEditingConsultant(true);
-              }}
-              className="bg-[#1A1A1A] hover:bg-black text-[#E899AC] text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5"
-            >
-              <Plus className="w-4 h-4" />
-              <span>+ Cadastrar Nova Vendedora</span>
-            </button>
-
-            <button
               onClick={() => setIsEditingConsultant(!isEditingConsultant)}
               className="mk-gold-gradient text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md cursor-pointer flex items-center gap-1.5"
             >
               <Edit2 className="w-4 h-4" />
-              <span>{isEditingConsultant ? 'Fechar Edição' : 'Editar Dados da Vendedora'}</span>
+              <span>{isEditingConsultant ? 'Fechar Edição' : 'Editar Dados da Consultora'}</span>
             </button>
           </div>
+        </div>
+
+        {/* Card Separado Exclusivo para Cadastrar Nova Consultora de Beleza */}
+        <div className="bg-[#FAF7F5] p-4 rounded-2xl border border-[#E899AC]/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#F8E8E8] text-[#B76E79] flex items-center justify-center font-bold">
+              <Plus className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-gray-900 text-xs">Cadastrar Outra Consultora de Beleza</h4>
+              <p className="text-[11px] text-gray-500">Adicione uma nova consultora à rede de vendas do sistema.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setConsultantForm({
+                id: 'c-' + Date.now(),
+                name: '',
+                title: 'Consultora de Beleza Independente Mary Kay®',
+                region: 'Itajaí e região',
+                code: '',
+                phone: '',
+                pixKey: '',
+                avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
+                loginMaryKay: '',
+                passwordMaryKay: ''
+              });
+              setIsEditingConsultant(true);
+            }}
+            className="bg-[#1A1A1A] hover:bg-black text-[#E899AC] text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5 shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Cadastrar Nova Consultora</span>
+          </button>
         </div>
 
         {/* Seleção de Vendedora Ativa quando houver mais de uma */}

@@ -104,7 +104,7 @@ export default function AdminControlPanel({
               className="bg-amber-500 hover:bg-amber-400 text-gray-950 font-bold text-xs px-4 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2 cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
-              <span>+ Nova Vendedora</span>
+              <span>+ Nova Consultora de Beleza</span>
             </button>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function AdminControlPanel({
         
         <div className="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm space-y-2">
           <div className="flex items-center justify-between text-gray-500 text-xs font-semibold">
-            <span>Total de Vendedoras</span>
+            <span>Total de Consultoras</span>
             <div className="w-8 h-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
               <Users className="w-4 h-4" />
             </div>
@@ -135,7 +135,7 @@ export default function AdminControlPanel({
             </div>
           </div>
           <div className="text-2xl font-black text-emerald-600">R$ {totalNetworkRevenue.toFixed(2)}</div>
-          <p className="text-[10px] text-gray-400">Soma de todas as vendedoras</p>
+          <p className="text-[10px] text-gray-400">Soma de todas as consultoras</p>
         </div>
 
         <div className="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm space-y-2">
@@ -173,7 +173,7 @@ export default function AdminControlPanel({
           }`}
         >
           <Users className="w-4 h-4" />
-          <span>👩‍💼 Gerenciar Vendedoras ({consultants.length})</span>
+          <span>👩‍💼 Gerenciar Consultoras de Beleza ({consultants.length})</span>
         </button>
         <button
           onClick={() => setActiveSubTab('settings')}
