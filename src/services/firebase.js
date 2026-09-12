@@ -38,18 +38,22 @@ try {
   console.warn("Inicializando modo de compatibilidade/simulação Firebase:", e);
 }
 
-// 1. Autenticação com Google com fallback resiliente para ambiente web / GitHub Pages
+// 1. Autenticação com Google com fallback sem hardcode
 export const loginWithGoogle = async () => {
-  if (!auth) {
-    return loginAsConsultantDirectly();
+  if (auth) {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      if (result?.user) return result.user;
+    } catch (error) {
+      console.warn("Popup do Google indisponível ou bloqueado pelo navegador. Solicitando e-mail de conta:", error);
+    }
   }
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
-  } catch (error) {
-    console.warn("Popup do Google indisponível ou bloqueado. Conectando conta:", error);
-    return loginAsConsultantDirectly();
-  }
+
+  // Fallback quando o popup do Google for bloqueado pelo navegador/hospedagem:
+  const userEmail = window.prompt("Janela popup bloqueada pelo navegador. Informe seu e-mail do Google para acessar:");
+  if (!userEmail || !userEmail.trim()) return null;
+
+  return loginWithGoogleEmail(userEmail);
 };
 
 // 1b. Autenticação por E-mail do Google
