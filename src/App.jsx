@@ -38,14 +38,28 @@ export default function App() {
 
   const isAdmin = isUserAdmin(currentUser);
 
-  // Monitorar Autenticação do Google
+  // Monitorar Autenticação do Google & Sessão Ativa
   useEffect(() => {
+    // 1. Verificar se há sessão salva localmente
+    const savedUser = localStorage.getItem('mk_auth_user');
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setCurrentUser(parsedUser);
+        if (parsedUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+          setActiveTabState('admin');
+        }
+      } catch (e) {}
+    }
+
+    // 2. Monitorar Firebase Auth
     const unsubscribe = subscribeToAuth((user) => {
-      setCurrentUser(user);
       if (user) {
+        setCurrentUser(user);
+        localStorage.setItem('mk_auth_user', JSON.stringify(user));
         showToast(`Bem-vinda(o), ${user.displayName || user.email}!`);
         if (user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-          setActiveTab('admin');
+          setActiveTabState('admin');
         }
       }
     });
@@ -505,8 +519,11 @@ export default function App() {
         isAdmin={isAdmin}
         onOpenLoginModal={() => setIsLoginModalOpen(true)}
         onLogout={async () => {
+          localStorage.removeItem('mk_auth_user');
+          setCurrentUser(null);
           await logoutUser();
-          showToast('Sessão encerrada.');
+          setActiveTab('carts');
+          showToast('Sessão encerrada com sucesso.');
         }}
         onOpenKitsModal={() => setIsKitsModalOpen(true)}
         onOpenLoyaltyModal={() => setIsLoyaltyModalOpen(true)}
