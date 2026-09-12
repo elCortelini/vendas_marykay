@@ -18,6 +18,7 @@ import SalesDashboardView from './components/SalesDashboardView';
 import AdminControlPanel from './components/AdminControlPanel';
 import LoginModal from './components/LoginModal';
 import SelfRegisterModal from './components/SelfRegisterModal';
+import PublicLandingView from './components/PublicLandingView';
 import defaultDb from '../server/data/db.json';
 import { subscribeToAuth, logoutUser, isUserAdmin, ADMIN_EMAIL } from './services/firebase';
 import { saveToCloud, fetchFromCloud } from './services/cloudSync';
@@ -667,152 +668,177 @@ export default function App() {
 
       {/* Conteúdo Principal */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'admin' && isAdmin && (
-          <AdminControlPanel
-            adminUser={currentUser}
-            consultants={data?.consultants || [data?.consultant]}
-            products={data?.products || []}
-            carts={data?.carts || []}
-            clients={data?.clients || []}
-            onSaveConsultant={handleSaveConsultant}
-            onApproveConsultant={handleApproveConsultant}
-            onDeleteConsultant={handleDeleteConsultant}
-            onSelectConsultantToInspect={(consultantId) => {
-              handleSelectConsultant(consultantId);
-              setActiveTab('carts');
-            }}
-            onSyncCatalog={handleSyncCatalog}
-          />
-        )}
+        {!currentUser ? (
+          activeTab === 'catalog' ? (
+            <CatalogSync
+              products={data?.products || []}
+              categories={data?.categories || []}
+              onSyncCatalog={handleSyncCatalog}
+              isSyncing={isSyncing}
+              onUpdateProductImage={handleUpdateProductImage}
+              onAddProduct={handleAddProduct}
+              onFetchProductBySku={handleFetchProductBySku}
+              onOpenFlyerModal={() => setIsFlyerModalOpen(true)}
+              onOpenKitsModal={() => setIsKitsModalOpen(true)}
+              onUpdateInventory={handleUpdateInventory}
+              onQuickAddToCart={() => setIsLoginModalOpen(true)}
+            />
+          ) : (
+            <PublicLandingView
+              onOpenLoginModal={() => setIsLoginModalOpen(true)}
+              products={data?.products || []}
+            />
+          )
+        ) : (
+          <>
+            {activeTab === 'admin' && isAdmin && (
+              <AdminControlPanel
+                adminUser={currentUser}
+                consultants={data?.consultants || [data?.consultant]}
+                products={data?.products || []}
+                carts={data?.carts || []}
+                clients={data?.clients || []}
+                onSaveConsultant={handleSaveConsultant}
+                onApproveConsultant={handleApproveConsultant}
+                onDeleteConsultant={handleDeleteConsultant}
+                onSelectConsultantToInspect={(consultantId) => {
+                  handleSelectConsultant(consultantId);
+                  setActiveTab('carts');
+                }}
+                onSyncCatalog={handleSyncCatalog}
+              />
+            )}
 
-        {activeTab === 'carts' && (
-          <MultiCart
-            carts={data?.carts || []}
-            clients={data?.clients || []}
-            products={data?.products || []}
-            activeCartId={activeCartId}
-            setActiveCartId={setActiveCartId}
-            onUpdateCart={handleUpdateCart}
-            onDeleteCart={handleDeleteCart}
-            onCreateNewCart={handleCreateCartForClient}
-            onOpenQuoteModal={(cart) => setQuoteModalCart(cart)}
-            onOpenConsolidator={() => setIsConsolidatorOpen(true)}
-          />
-        )}
+            {activeTab === 'carts' && (
+              <MultiCart
+                carts={data?.carts || []}
+                clients={data?.clients || []}
+                products={data?.products || []}
+                activeCartId={activeCartId}
+                setActiveCartId={setActiveCartId}
+                onUpdateCart={handleUpdateCart}
+                onDeleteCart={handleDeleteCart}
+                onCreateNewCart={handleCreateCartForClient}
+                onOpenQuoteModal={(cart) => setQuoteModalCart(cart)}
+                onOpenConsolidator={() => setIsConsolidatorOpen(true)}
+              />
+            )}
 
-        {activeTab === 'dashboard' && (
-          <SalesDashboardView
-            products={data?.products || []}
-            clients={data?.clients || []}
-            carts={data?.carts || []}
-            payments={data?.payments || []}
-          />
-        )}
+            {activeTab === 'dashboard' && (
+              <SalesDashboardView
+                products={data?.products || []}
+                clients={data?.clients || []}
+                carts={data?.carts || []}
+                payments={data?.payments || []}
+              />
+            )}
 
-        {activeTab === 'clients' && (
-          <ClientManagement
-            clients={data?.clients || []}
-            carts={data?.carts || []}
-            onSaveClient={handleSaveClient}
-            onDeleteClient={handleDeleteClient}
-            onCreateCartForClient={handleCreateCartForClient}
-            onSelectCart={(cartId) => {
-              setActiveCartId(cartId);
-              setActiveTab('carts');
-            }}
-          />
-        )}
+            {activeTab === 'clients' && (
+              <ClientManagement
+                clients={data?.clients || []}
+                carts={data?.carts || []}
+                onSaveClient={handleSaveClient}
+                onDeleteClient={handleDeleteClient}
+                onCreateCartForClient={handleCreateCartForClient}
+                onSelectCart={(cartId) => {
+                  setActiveCartId(cartId);
+                  setActiveTab('carts');
+                }}
+              />
+            )}
 
-        {activeTab === 'catalog' && (
-          <CatalogSync
-            products={data?.products || []}
-            categories={data?.categories || []}
-            onSyncCatalog={handleSyncCatalog}
-            isSyncing={isSyncing}
-            onUpdateProductImage={handleUpdateProductImage}
-            onAddProduct={handleAddProduct}
-            onFetchProductBySku={handleFetchProductBySku}
-            onOpenFlyerModal={() => setIsFlyerModalOpen(true)}
-            onOpenKitsModal={() => setIsKitsModalOpen(true)}
-            onUpdateInventory={handleUpdateInventory}
-            onQuickAddToCart={(product) => {
-              const targetCart = data?.carts?.find(c => c.id === activeCartId) || data?.carts[0];
-              if (targetCart) {
-                const existing = targetCart.items.find(i => i.productId === product.id);
-                let items = [];
-                if (existing) {
-                  items = targetCart.items.map(i => i.productId === product.id ? { ...i, quantity: i.quantity + 1 } : i);
-                } else {
-                  items = [...targetCart.items, {
-                    productId: product.id,
-                    sku: product.sku,
-                    name: product.name,
-                    price: product.price,
-                    costPrice: product.costPrice,
-                    quantity: 1,
-                    image: product.image
-                  }];
-                }
-                handleUpdateCart({ ...targetCart, items });
-                showToast(`Adicionado ao carrinho de ${targetCart.clientName}!`);
-              }
-            }}
-          />
-        )}
+            {activeTab === 'catalog' && (
+              <CatalogSync
+                products={data?.products || []}
+                categories={data?.categories || []}
+                onSyncCatalog={handleSyncCatalog}
+                isSyncing={isSyncing}
+                onUpdateProductImage={handleUpdateProductImage}
+                onAddProduct={handleAddProduct}
+                onFetchProductBySku={handleFetchProductBySku}
+                onOpenFlyerModal={() => setIsFlyerModalOpen(true)}
+                onOpenKitsModal={() => setIsKitsModalOpen(true)}
+                onUpdateInventory={handleUpdateInventory}
+                onQuickAddToCart={(product) => {
+                  const targetCart = data?.carts?.find(c => c.id === activeCartId) || data?.carts[0];
+                  if (targetCart) {
+                    const existing = targetCart.items.find(i => i.productId === product.id);
+                    let items = [];
+                    if (existing) {
+                      items = targetCart.items.map(i => i.productId === product.id ? { ...i, quantity: i.quantity + 1 } : i);
+                    } else {
+                      items = [...targetCart.items, {
+                        productId: product.id,
+                        sku: product.sku,
+                        name: product.name,
+                        price: product.price,
+                        costPrice: product.costPrice,
+                        quantity: 1,
+                        image: product.image
+                      }];
+                    }
+                    handleUpdateCart({ ...targetCart, items });
+                    showToast(`Adicionado ao carrinho de ${targetCart.clientName}!`);
+                  }
+                }}
+              />
+            )}
 
-        {activeTab === 'inventory' && (
-          <InventoryManagerView
-            products={data?.products || []}
-            clients={data?.clients || []}
-            onUpdateInventory={handleUpdateInventory}
-            onRecordPayment={handleRecordPayment}
-          />
-        )}
+            {activeTab === 'inventory' && (
+              <InventoryManagerView
+                products={data?.products || []}
+                clients={data?.clients || []}
+                onUpdateInventory={handleUpdateInventory}
+                onRecordPayment={handleRecordPayment}
+              />
+            )}
 
-        {activeTab === 'kits' && (
-          <KitsManagerView
-            products={data?.products || []}
-            onAddKitToCart={handleAddKitToCart}
-          />
-        )}
+            {activeTab === 'kits' && (
+              <KitsManagerView
+                products={data?.products || []}
+                onAddKitToCart={handleAddKitToCart}
+              />
+            )}
 
-        {activeTab === 'loyalty' && (
-          <LoyaltyManagerView
-            rewards={data?.rewards || []}
-            clients={data?.clients || []}
-            onAddReward={handleAddReward}
-            onDeleteReward={handleDeleteReward}
-            onUpdateClientPoints={handleUpdateClientPoints}
-          />
-        )}
+            {activeTab === 'loyalty' && (
+              <LoyaltyManagerView
+                rewards={data?.rewards || []}
+                clients={data?.clients || []}
+                onAddReward={handleAddReward}
+                onDeleteReward={handleDeleteReward}
+                onUpdateClientPoints={handleUpdateClientPoints}
+              />
+            )}
 
-        {activeTab === 'financial' && (
-          <FinancialDashboard
-            products={data?.products || []}
-            clients={data?.clients || []}
-            carts={data?.carts || []}
-            payments={data?.payments || []}
-            onRecordPayment={handleRecordPayment}
-            onOpenLoyalty={() => setIsLoyaltyModalOpen(true)}
-          />
-        )}
+            {activeTab === 'financial' && (
+              <FinancialDashboard
+                products={data?.products || []}
+                clients={data?.clients || []}
+                carts={data?.carts || []}
+                payments={data?.payments || []}
+                onRecordPayment={handleRecordPayment}
+                onOpenLoyalty={() => setIsLoyaltyModalOpen(true)}
+              />
+            )}
 
-        {activeTab === 'calculator' && (
-          <ConsultantCalculator consultant={activeConsultant} />
-        )}
+            {activeTab === 'calculator' && (
+              <ConsultantCalculator consultant={activeConsultant} />
+            )}
 
-        {activeTab === 'settings' && (
-          <SettingsPanel
-            consultant={activeConsultant}
-            consultants={data?.consultants || [data?.consultant]}
-            settings={data?.settings}
-            products={data?.products || []}
-            onSaveSettings={handleSaveSettings}
-            onUpdateProductPricing={handleUpdateProductPricing}
-            onSaveConsultant={handleSaveConsultant}
-            onSelectConsultant={handleSelectConsultant}
-            onDeleteConsultant={handleDeleteConsultant}
-          />
+            {activeTab === 'settings' && (
+              <SettingsPanel
+                consultant={activeConsultant}
+                consultants={data?.consultants || [data?.consultant]}
+                settings={data?.settings}
+                products={data?.products || []}
+                onSaveSettings={handleSaveSettings}
+                onUpdateProductPricing={handleUpdateProductPricing}
+                onSaveConsultant={handleSaveConsultant}
+                onSelectConsultant={handleSelectConsultant}
+                onDeleteConsultant={handleDeleteConsultant}
+              />
+            )}
+          </>
         )}
       </main>
 

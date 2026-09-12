@@ -175,147 +175,186 @@ export default function Header({
           </div>
         </div>
 
-        {/* Abas de Navegação Principal (100% Visíveis Sem Rolagem Lateral) */}
+        {/* Abas de Navegação Principal */}
         <nav className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-3 pt-3 border-t border-gray-100">
-          {isAdmin && (
-            <button
-              onClick={() => setActiveTab('admin')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'admin'
-                  ? 'bg-amber-500 text-gray-950 shadow-md font-black'
-                  : 'bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300'
-              }`}
-            >
-              <span>🛡️ Área do Administrador</span>
-            </button>
+          {!currentUser ? (
+            /* Navegação Pública (Não Logado) */
+            <>
+              <button
+                onClick={() => setActiveTab('home')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'home'
+                    ? 'bg-[#E899AC] text-white shadow-md font-bold'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>✨ Página Inicial</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('catalog')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'catalog'
+                    ? 'bg-[#E899AC] text-white shadow-md font-bold'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                }`}
+              >
+                <span>🛍️ Catálogo Geral de Produtos</span>
+              </button>
+
+              <button
+                onClick={onOpenLoginModal}
+                className="bg-amber-500 hover:bg-amber-400 text-gray-950 text-xs font-black px-3.5 py-1.5 rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer border border-amber-600 ml-auto"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>🔑 Entrar ou Cadastrar-se</span>
+              </button>
+            </>
+          ) : (
+            /* Navegação Interna Protegida (Usuário Logado) */
+            <>
+              {isAdmin && (
+                <button
+                  onClick={() => setActiveTab('admin')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    activeTab === 'admin'
+                      ? 'bg-amber-500 text-gray-950 shadow-md font-black'
+                      : 'bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300'
+                  }`}
+                >
+                  <span>🛡️ Área do Administrador</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => setActiveTab('carts')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'carts'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                }`}
+              >
+                <ShoppingBag className="w-3.5 h-3.5" />
+                <span>Carrinhos & Orçamentos</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  activeTab === 'carts' ? 'bg-white/30 text-white' : 'bg-gray-200 text-gray-700'
+                }`}>
+                  {cartsCount}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'dashboard'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                }`}
+              >
+                <BarChart3 className="w-3.5 h-3.5" />
+                <span>📊 Dashboard de Vendas</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('clients')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'clients'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Clientes & Fichas</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  activeTab === 'clients' ? 'bg-white/30 text-white' : 'bg-gray-200 text-gray-700'
+                }`}>
+                  {clientsCount}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('inventory')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'inventory'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                }`}
+              >
+                <span>📦 Controle de Estoque</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('catalog')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'catalog'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Catálogo Mary Kay®</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('kits')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'kits'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                }`}
+              >
+                <span>🎁 Pacotes & Kits</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('loyalty')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'loyalty'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                }`}
+              >
+                <span>💎 Fidelidade VIP</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('financial')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'financial'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Financeiro & DRE</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('calculator')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'calculator'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                }`}
+              >
+                <Heart className="w-3.5 h-3.5" />
+                <span>Calculadora & Dicas</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'settings'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                }`}
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span>👩‍💼 Vendedoras & Configurações</span>
+              </button>
+            </>
           )}
-
-          <button
-            onClick={() => setActiveTab('carts')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'carts'
-                ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
-            }`}
-          >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            <span>Carrinhos & Orçamentos</span>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-              activeTab === 'carts' ? 'bg-white/30 text-white' : 'bg-gray-200 text-gray-700'
-            }`}>
-              {cartsCount}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'dashboard'
-                ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
-            }`}
-          >
-            <BarChart3 className="w-3.5 h-3.5" />
-            <span>📊 Dashboard de Vendas</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('clients')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'clients'
-                ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>Clientes & Fichas</span>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-              activeTab === 'clients' ? 'bg-white/30 text-white' : 'bg-gray-200 text-gray-700'
-            }`}>
-              {clientsCount}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('inventory')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'inventory'
-                ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
-            }`}
-          >
-            <span>📦 Controle de Estoque</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('catalog')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'catalog'
-                ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Catálogo Mary Kay®</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('kits')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'kits'
-                ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
-            }`}
-          >
-            <span>🎁 Pacotes & Kits</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('loyalty')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'loyalty'
-                ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
-            }`}
-          >
-            <span>💎 Fidelidade VIP</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('financial')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'financial'
-                ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Financeiro & DRE</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('calculator')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'calculator'
-                ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
-            }`}
-          >
-            <Heart className="w-3.5 h-3.5" />
-            <span>Calculadora & Dicas</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'settings'
-                ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
-            }`}
-          >
-            <Settings className="w-3.5 h-3.5" />
-            <span>👩‍💼 Vendedoras & Configurações</span>
-          </button>
         </nav>
       </div>
     </header>
