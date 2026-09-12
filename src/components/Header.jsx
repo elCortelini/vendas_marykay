@@ -24,7 +24,7 @@ export default function Header({
             ? "🛡️ MODO ADMINISTRADOR MASTER • Gestão Geral da Rede Mary Kay® (elcortelini@gmail.com)" 
             : currentUser
               ? `Atendimento Personalizado Mary Kay® • Consultora ${consultant?.name || currentUser?.displayName || "Mary Kay®"} (${consultant?.region || "Itajaí e Região"})`
-              : "✨ Portal de Atendimento Mary Kay® • Faça Login com o Google para Acessar ✨"}
+              : "✨ Gestor de Vendas Mary Kay® • Faça Login com o Google para Acessar ✨"}
         </span>
         <Sparkles className="w-3.5 h-3.5 animate-pulse" />
       </div>
@@ -34,7 +34,7 @@ export default function Header({
           
           {/* Perfil Ativo (Administrador Master vs Vendedora vs Visitante) */}
           <div
-            onClick={() => setActiveTab(isAdmin ? 'admin' : currentUser ? 'settings' : 'carts')}
+            onClick={() => setActiveTab(isAdmin ? 'admin' : currentUser ? 'settings' : 'home')}
             className="flex items-center gap-4 cursor-pointer group p-1.5 rounded-2xl hover:bg-[#F8E8E8]/50 transition-all"
             title={isAdmin ? "Clique para acessar a Área do Administrador Master" : currentUser ? "Clique para Editar Perfil da Consultora" : "Faça Login"}
           >
@@ -48,7 +48,7 @@ export default function Header({
                         ? (consultant?.avatar || currentUser?.photoURL || "/images/tailise_avatar.png") 
                         : "https://api.dicebear.com/7.x/initials/svg?seed=MaryKay"
                   } 
-                  alt={isAdmin ? "Administrador Master" : (consultant?.name || "Consultora Mary Kay®")} 
+                  alt={isAdmin ? "Administrador Master" : (consultant?.name || "Gestor de Vendas Mary Kay®")} 
                   className="w-full h-full object-cover rounded-full border-2 border-white bg-white"
                 />
               </div>
@@ -62,7 +62,7 @@ export default function Header({
                     ? "Administrador Master" 
                     : currentUser 
                       ? (consultant?.name || currentUser?.displayName || "Consultora Mary Kay®") 
-                      : "Consultora Mary Kay®"}
+                      : "Gestor de Vendas Mary Kay®"}
                 </h1>
                 {isAdmin ? (
                   <span className="bg-amber-500 text-gray-950 text-xs font-black px-2.5 py-0.5 rounded-full shadow-sm border border-amber-600 flex items-center gap-1">
@@ -92,7 +92,7 @@ export default function Header({
                     ? "Gestão de Vendedoras, Catálogo & Permissões da Rede" 
                     : currentUser 
                       ? (consultant?.title || "Consultora de Beleza Independente Mary Kay®") 
-                      : "Faça login com sua conta do Google para acessar"}
+                      : "Plataforma Completa para Consultoras de Beleza Independente"}
                 </span>
                 {!isAdmin && currentUser && (
                   <>
@@ -175,57 +175,21 @@ export default function Header({
           </div>
         </div>
 
-        {/* Abas de Navegação Principal */}
-        <nav className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-3 pt-3 border-t border-gray-100">
-          {!currentUser ? (
-            /* Navegação Pública (Não Logado) */
-            <>
+        {/* Abas de Navegação Principal (Visíveis Apenas Quando Logado) */}
+        {currentUser && (
+          <nav className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-3 pt-3 border-t border-gray-100">
+            {isAdmin && (
               <button
-                onClick={() => setActiveTab('home')}
+                onClick={() => setActiveTab('admin')}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'home'
-                    ? 'bg-[#E899AC] text-white shadow-md font-bold'
-                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                  activeTab === 'admin'
+                    ? 'bg-amber-500 text-gray-950 shadow-md font-black'
+                    : 'bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>✨ Página Inicial</span>
+                <span>🛡️ Área do Administrador</span>
               </button>
-
-              <button
-                onClick={() => setActiveTab('catalog')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'catalog'
-                    ? 'bg-[#E899AC] text-white shadow-md font-bold'
-                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
-                }`}
-              >
-                <span>🛍️ Catálogo Geral de Produtos</span>
-              </button>
-
-              <button
-                onClick={onOpenLoginModal}
-                className="bg-amber-500 hover:bg-amber-400 text-gray-950 text-xs font-black px-3.5 py-1.5 rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer border border-amber-600 ml-auto"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span>🔑 Entrar ou Cadastrar-se</span>
-              </button>
-            </>
-          ) : (
-            /* Navegação Interna Protegida (Usuário Logado) */
-            <>
-              {isAdmin && (
-                <button
-                  onClick={() => setActiveTab('admin')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    activeTab === 'admin'
-                      ? 'bg-amber-500 text-gray-950 shadow-md font-black'
-                      : 'bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300'
-                  }`}
-                >
-                  <span>🛡️ Área do Administrador</span>
-                </button>
-              )}
+            )}
 
               <button
                 onClick={() => setActiveTab('carts')}
@@ -353,9 +317,8 @@ export default function Header({
                 <Settings className="w-3.5 h-3.5" />
                 <span>👩‍💼 Vendedoras & Configurações</span>
               </button>
-            </>
-          )}
-        </nav>
+          </nav>
+        )}
       </div>
     </header>
   );
