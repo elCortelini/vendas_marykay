@@ -19,6 +19,7 @@ import AdminControlPanel from './components/AdminControlPanel';
 import LoginModal from './components/LoginModal';
 import defaultDb from '../server/data/db.json';
 import { subscribeToAuth, logoutUser, isUserAdmin, ADMIN_EMAIL } from './services/firebase';
+import { saveToCloud, fetchFromCloud } from './services/cloudSync';
 
 export default function App() {
   const [data, setData] = useState(null);
@@ -53,7 +54,7 @@ export default function App() {
     setActiveTabState(tab);
   };
 
-  // Carregar dados da API ou do fallback estático (GitHub Pages)
+  // Carregar dados da API ou do Banco de Dados em Nuvem (GitHub Pages)
   const fetchData = async () => {
     try {
       const res = await fetch('/api/data');
@@ -67,17 +68,12 @@ export default function App() {
         return;
       }
     } catch (err) {
-      console.log('Ambiente estático ou offline (GitHub Pages). Carregando catálogo padrão.');
+      console.log('Ambiente estático ou offline (GitHub Pages). Carregando banco de dados da nuvem.');
     }
 
-    // Fallback do localStorage ou db.json
-    const savedLocal = localStorage.getItem('mk_app_data');
-    let loadedData = defaultDb;
-    if (savedLocal) {
-      try {
-        loadedData = JSON.parse(savedLocal);
-      } catch (e) {}
-    }
+    // Buscar dados atualizados do Banco em Nuvem em tempo real
+    const cloudData = await fetchFromCloud();
+    const loadedData = cloudData || defaultDb;
 
     setData(loadedData);
     if (loadedData.carts && loadedData.carts.length > 0 && !activeCartId) {
