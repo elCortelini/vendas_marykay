@@ -891,10 +891,14 @@ export default function App() {
         onClose={() => setIsLoginModalOpen(false)}
         currentUser={currentUser}
         onLoginSuccess={(loggedUser) => {
-          showToast('Login com o Google realizado com sucesso!');
+          setCurrentUser(loggedUser);
+          localStorage.setItem('mk_auth_user', JSON.stringify(loggedUser));
+          showToast(`Bem-vinda(o), ${loggedUser.displayName || loggedUser.email}!`);
           handleUserLoginRedirect(loggedUser);
         }}
         onLogoutSuccess={async () => {
+          localStorage.removeItem('mk_auth_user');
+          setCurrentUser(null);
           await logoutUser();
           showToast('Sessão encerrada com sucesso!');
         }}
