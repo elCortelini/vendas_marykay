@@ -32,8 +32,8 @@ Sistema Web completo, moderno e elegante para gerenciamento de clientes, orçame
 
 1. **Clonar o Repositório**:
    ```bash
-   git clone https://github.com/elCortelini/app-mary-kay-tailise.git
-   cd app-mary-kay-tailise
+   git clone https://github.com/elCortelini/vendas_marykay.git
+   cd vendas_marykay
    ```
 
 2. **Instalar as Dependências**:
