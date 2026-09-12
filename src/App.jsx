@@ -44,6 +44,9 @@ export default function App() {
       setCurrentUser(user);
       if (user) {
         showToast(`Bem-vinda(o), ${user.displayName || user.email}!`);
+        if (user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+          setActiveTab('admin');
+        }
       }
     });
     return () => unsubscribe();

@@ -17,53 +17,63 @@ export default function Header({
   return (
     <header className="bg-white border-b border-[#E899AC]/30 sticky top-0 z-40 shadow-sm">
       {/* Top Banner Elegante */}
-      <div className="mk-gold-gradient text-white text-xs py-1.5 px-4 text-center font-medium tracking-wide flex items-center justify-center gap-2">
+      <div className={`${isAdmin ? 'bg-gradient-to-r from-gray-900 via-amber-700 to-gray-900 text-amber-300 font-bold' : 'mk-gold-gradient text-white'} text-xs py-1.5 px-4 text-center font-medium tracking-wide flex items-center justify-center gap-2`}>
         <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-        <span>Atendimento Personalizado Mary Kay® • Consultora Tailise (Itajaí e Região)</span>
+        <span>
+          {isAdmin 
+            ? "🛡️ MODO ADMINISTRADOR MASTER • Gestão Geral da Rede Mary Kay® (elcortelini@gmail.com)" 
+            : `Atendimento Personalizado Mary Kay® • Consultora ${consultant?.name || "Tailise"} (${consultant?.region || "Itajaí e Região"})`}
+        </span>
         <Sparkles className="w-3.5 h-3.5 animate-pulse" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           
-          {/* Perfil da Consultora Tailise */}
+          {/* Perfil Ativo (Administrador Master vs Vendedora) */}
           <div
-            onClick={() => setActiveTab('settings')}
+            onClick={() => setActiveTab(isAdmin ? 'admin' : 'settings')}
             className="flex items-center gap-4 cursor-pointer group p-1.5 rounded-2xl hover:bg-[#F8E8E8]/50 transition-all"
-            title="Clique para Cadastrar/Editar Vendedoras e Dados do Perfil"
+            title={isAdmin ? "Clique para acessar a Área do Administrador Master" : "Clique para Editar Perfil da Vendedora"}
           >
             <div className="relative">
-              <div className="w-14 h-14 rounded-full p-0.5 mk-gold-gradient shadow-md transition-transform group-hover:scale-105">
+              <div className={`w-14 h-14 rounded-full p-0.5 ${isAdmin ? 'bg-amber-500' : 'mk-gold-gradient'} shadow-md transition-transform group-hover:scale-105`}>
                 <img 
-                  src={consultant?.avatar || "/images/tailise_avatar.png"} 
-                  alt="Consultora Tailise" 
+                  src={isAdmin ? (currentUser?.photoURL || "/images/tailise_avatar.png") : (consultant?.avatar || "/images/tailise_avatar.png")} 
+                  alt={isAdmin ? "Administrador Master" : (consultant?.name || "Consultora Tailise")} 
                   className="w-full h-full object-cover rounded-full border-2 border-white"
                 />
               </div>
-              <span className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full" title="Online no Portal EmSintonia"></span>
+              <span className={`absolute bottom-0 right-0 w-4 h-4 ${isAdmin ? 'bg-amber-400' : 'bg-emerald-500'} border-2 border-white rounded-full`} title="Status da Conta"></span>
             </div>
 
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl font-bold font-serif-mk text-gray-900 tracking-tight group-hover:text-[#B76E79] transition-colors">
-                  {consultant?.name || "Tailise"}
+                  {isAdmin ? "Administrador Master" : (consultant?.name || "Tailise")}
                 </h1>
-                <span className="bg-[#F8E8E8] text-[#B76E79] text-xs font-semibold px-2.5 py-0.5 rounded-full border border-[#E899AC]/40 flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-[#B76E79]" />
-                  Código {consultant?.code || "NW7527"}
-                </span>
-                {isAdmin && (
-                  <span className="bg-amber-500 text-gray-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm">
-                    🛡️ Admin Master
+                {isAdmin ? (
+                  <span className="bg-amber-500 text-gray-950 text-xs font-black px-2.5 py-0.5 rounded-full shadow-sm border border-amber-600 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-gray-950" />
+                    elcortelini@gmail.com
+                  </span>
+                ) : (
+                  <span className="bg-[#F8E8E8] text-[#B76E79] text-xs font-semibold px-2.5 py-0.5 rounded-full border border-[#E899AC]/40 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#B76E79]" />
+                    Código {consultant?.code || "NW7527"}
                   </span>
                 )}
               </div>
               <p className="text-xs text-gray-600 font-medium flex items-center gap-2 mt-0.5">
-                <span>{consultant?.title || "Consultora de Beleza Independente Mary Kay®"}</span>
-                <span className="inline-block w-1 h-1 bg-gray-300 rounded-full"></span>
-                <span className="text-[#B76E79] flex items-center gap-0.5">
-                  <MapPin className="w-3 h-3 inline" /> {consultant?.region || "Itajaí e região"}
-                </span>
+                <span>{isAdmin ? "Gestão de Vendedoras, Catálogo & Permissões da Rede" : (consultant?.title || "Consultora de Beleza Independente Mary Kay®")}</span>
+                {!isAdmin && (
+                  <>
+                    <span className="inline-block w-1 h-1 bg-gray-300 rounded-full"></span>
+                    <span className="text-[#B76E79] flex items-center gap-0.5">
+                      <MapPin className="w-3.5 h-3.5 inline" /> {consultant?.region || "Itajaí e região"}
+                    </span>
+                  </>
+                )}
               </p>
             </div>
           </div>
