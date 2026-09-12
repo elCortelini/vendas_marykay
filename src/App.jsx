@@ -15,7 +15,10 @@ import KitsManagerView from './components/KitsManagerView';
 import LoyaltyManagerView from './components/LoyaltyManagerView';
 import InventoryManagerView from './components/InventoryManagerView';
 import SalesDashboardView from './components/SalesDashboardView';
+import AdminControlPanel from './components/AdminControlPanel';
+import LoginModal from './components/LoginModal';
 import defaultDb from '../server/data/db.json';
+import { subscribeToAuth, logoutUser, isUserAdmin, ADMIN_EMAIL } from './services/firebase';
 
 export default function App() {
   const [data, setData] = useState(null);
@@ -28,7 +31,22 @@ export default function App() {
   const [isFlyerModalOpen, setIsFlyerModalOpen] = useState(false);
   const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false);
   const [isKitsModalOpen, setIsKitsModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [notification, setNotification] = useState(null);
+
+  const isAdmin = isUserAdmin(currentUser);
+
+  // Monitorar Autenticação do Google
+  useEffect(() => {
+    const unsubscribe = subscribeToAuth((user) => {
+      setCurrentUser(user);
+      if (user) {
+        showToast(`Bem-vinda(o), ${user.displayName || user.email}!`);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const setActiveTab = (tab) => {
     localStorage.setItem('mk_active_tab', tab);
@@ -484,12 +502,36 @@ export default function App() {
         isSyncing={isSyncing}
         cartsCount={data?.carts?.length || 0}
         clientsCount={data?.clients?.length || 0}
+        currentUser={currentUser}
+        isAdmin={isAdmin}
+        onOpenLoginModal={() => setIsLoginModalOpen(true)}
+        onLogout={async () => {
+          await logoutUser();
+          showToast('Sessão encerrada.');
+        }}
         onOpenKitsModal={() => setIsKitsModalOpen(true)}
         onOpenLoyaltyModal={() => setIsLoyaltyModalOpen(true)}
       />
 
       {/* Conteúdo Principal */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {activeTab === 'admin' && isAdmin && (
+          <AdminControlPanel
+            adminUser={currentUser}
+            consultants={data?.consultants || [data?.consultant]}
+            products={data?.products || []}
+            carts={data?.carts || []}
+            clients={data?.clients || []}
+            onSaveConsultant={handleSaveConsultant}
+            onDeleteConsultant={handleDeleteConsultant}
+            onSelectConsultantToInspect={(consultantId) => {
+              handleSelectConsultant(consultantId);
+              setActiveTab('carts');
+            }}
+            onSyncCatalog={handleSyncCatalog}
+          />
+        )}
+
         {activeTab === 'carts' && (
           <MultiCart
             carts={data?.carts || []}
@@ -665,6 +707,12 @@ export default function App() {
           onAddKitToCart={handleAddKitToCart}
         />
       )}
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLoginSuccess={() => showToast('Login com o Google realizado com sucesso!')}
+      />
 
       {/* Footer Elegante */}
       <footer className="bg-white border-t border-[#E899AC]/30 py-6 text-center text-xs text-gray-500 mt-12">
