@@ -38,22 +38,17 @@ try {
   console.warn("Inicializando modo de compatibilidade/simulação Firebase:", e);
 }
 
-// 1. Autenticação com Google com fallback sem hardcode
+// 1. Autenticação com Google com fallback seguro
 export const loginWithGoogle = async () => {
   if (auth) {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       if (result?.user) return result.user;
     } catch (error) {
-      console.warn("Popup do Google indisponível ou bloqueado pelo navegador. Solicitando e-mail de conta:", error);
+      console.warn("Popup do Google indisponível ou bloqueado. Retornando controle ao modal:", error);
     }
   }
-
-  // Fallback quando o popup do Google for bloqueado pelo navegador/hospedagem:
-  const userEmail = window.prompt("Janela popup bloqueada pelo navegador. Informe seu e-mail do Google para acessar:");
-  if (!userEmail || !userEmail.trim()) return null;
-
-  return loginWithGoogleEmail(userEmail);
+  return null;
 };
 
 // 1b. Autenticação por E-mail do Google
