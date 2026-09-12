@@ -15,6 +15,7 @@ import KitsManagerView from './components/KitsManagerView';
 import LoyaltyManagerView from './components/LoyaltyManagerView';
 import InventoryManagerView from './components/InventoryManagerView';
 import SalesDashboardView from './components/SalesDashboardView';
+import defaultDb from '../server/data/db.json';
 
 export default function App() {
   const [data, setData] = useState(null);
@@ -34,7 +35,7 @@ export default function App() {
     setActiveTabState(tab);
   };
 
-  // Carregar dados da API
+  // Carregar dados da API ou do fallback estático (GitHub Pages)
   const fetchData = async () => {
     try {
       const res = await fetch('/api/data');
@@ -44,12 +45,27 @@ export default function App() {
         if (json.carts && json.carts.length > 0 && !activeCartId) {
           setActiveCartId(json.carts[0].id);
         }
+        setLoading(false);
+        return;
       }
     } catch (err) {
-      console.error('Erro ao conectar ao servidor backend:', err);
-    } finally {
-      setLoading(false);
+      console.log('Ambiente estático ou offline (GitHub Pages). Carregando catálogo padrão.');
     }
+
+    // Fallback do localStorage ou db.json
+    const savedLocal = localStorage.getItem('mk_app_data');
+    let loadedData = defaultDb;
+    if (savedLocal) {
+      try {
+        loadedData = JSON.parse(savedLocal);
+      } catch (e) {}
+    }
+
+    setData(loadedData);
+    if (loadedData.carts && loadedData.carts.length > 0 && !activeCartId) {
+      setActiveCartId(loadedData.carts[0].id);
+    }
+    setLoading(false);
   };
 
   useEffect(() => {

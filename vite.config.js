@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/vendas_marykay/',
   plugins: [react(), tailwindcss()],
   server: {
     port: 5173,
