@@ -710,7 +710,12 @@ export default function App() {
       <LoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
+        currentUser={currentUser}
         onLoginSuccess={() => showToast('Login com o Google realizado com sucesso!')}
+        onLogoutSuccess={async () => {
+          await logoutUser();
+          showToast('Sessão encerrada com sucesso!');
+        }}
       />
 
       {/* Footer Elegante */}
