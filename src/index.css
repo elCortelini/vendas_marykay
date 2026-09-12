@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  h1, h2, h3, .font-serif-mk {
+    font-family: 'Playfair Display', serif;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #FAF7F5;
+}
+::-webkit-scrollbar-thumb {
+  background: #E899AC;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B76E79;
+}
+
+/* Glassmorphism & Luxury Shadows */
+.mk-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(232, 153, 172, 0.2);
+}
+
+.mk-card-shadow {
+  box-shadow: 0 10px 30px -5px rgba(232, 153, 172, 0.15), 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.mk-gold-gradient {
+  background: linear-gradient(135deg, #B76E79 0%, #E899AC 50%, #C5838C 100%);
+}
+
+.mk-rose-bg {
+  background: linear-gradient(180deg, #FAF7F5 0%, #F8E8E8 100%);
+}
