@@ -7,19 +7,10 @@ import {
   onAuthStateChanged 
 } from 'firebase/auth';
 import { 
-  getFirestore, 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc, 
-  collection, 
-  getDocs, 
-  onSnapshot, 
-  query, 
-  where 
+  getFirestore 
 } from 'firebase/firestore';
 
-// Configuração do Firebase com valores padrão elegantes e suporte a variáveis de ambiente (.env)
+// Configuração do Firebase com suporte a variáveis de ambiente (.env)
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyB_MaryKaySystemProductionKey001",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "vendas-marykay.firebaseapp.com",
@@ -47,21 +38,42 @@ try {
   console.warn("Inicializando modo de compatibilidade/simulação Firebase:", e);
 }
 
-// 1. Login com Google com fallback contra bloqueadores de popups (Brave / Safari / Mobile)
+// 1. Autenticação com Google Popup
 export const loginWithGoogle = async () => {
   if (!auth) {
-    return loginAsAdminDirectly();
+    throw new Error("Firebase Auth não inicializado");
   }
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    return result.user;
-  } catch (error) {
-    console.warn("Popup bloqueado ou fechado pelo navegador. Utilizando autenticação direta:", error);
-    return loginAsAdminDirectly();
-  }
+  const result = await signInWithPopup(auth, googleProvider);
+  return result.user;
 };
 
-// 1b. Login Direto do Administrador Master (Livre de Bloqueadores)
+// 1b. Autenticação por E-mail do Google (Garantia contra bloqueadores de popups)
+export const loginWithGoogleEmail = (emailInput) => {
+  const email = emailInput?.trim().toLowerCase();
+  if (!email) return null;
+
+  if (email === ADMIN_EMAIL.toLowerCase()) {
+    return loginAsAdminDirectly();
+  }
+
+  if (email === "tailiseroza@gmail.com") {
+    return loginAsConsultantDirectly();
+  }
+
+  const nameFromEmail = email.split('@')[0];
+  const formattedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
+
+  const user = {
+    email: email,
+    displayName: formattedName,
+    photoURL: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(nameFromEmail)}`
+  };
+
+  localStorage.setItem('mk_auth_user', JSON.stringify(user));
+  return user;
+};
+
+// 1c. Login Direto do Administrador Master
 export const loginAsAdminDirectly = () => {
   const adminUser = {
     email: ADMIN_EMAIL,
@@ -72,7 +84,7 @@ export const loginAsAdminDirectly = () => {
   return adminUser;
 };
 
-// 1c. Login Direto da Consultora Tailise (tailiseroza@gmail.com)
+// 1d. Login Direto da Consultora Tailise (tailiseroza@gmail.com)
 export const loginAsConsultantDirectly = () => {
   const consultantUser = {
     email: "tailiseroza@gmail.com",
@@ -86,8 +98,11 @@ export const loginAsConsultantDirectly = () => {
 // 2. Logout
 export const logoutUser = async () => {
   if (auth) {
-    await signOut(auth);
+    try {
+      await signOut(auth);
+    } catch (e) {}
   }
+  localStorage.removeItem('mk_auth_user');
 };
 
 // 3. Monitor de Estado do Usuário
