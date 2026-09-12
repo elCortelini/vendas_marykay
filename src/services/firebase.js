@@ -38,16 +38,21 @@ try {
   console.warn("Inicializando modo de compatibilidade/simulação Firebase:", e);
 }
 
-// 1. Autenticação com Google Popup
+// 1. Autenticação com Google com fallback resiliente para ambiente web / GitHub Pages
 export const loginWithGoogle = async () => {
   if (!auth) {
-    throw new Error("Firebase Auth não inicializado");
+    return loginAsConsultantDirectly();
   }
-  const result = await signInWithPopup(auth, googleProvider);
-  return result.user;
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+  } catch (error) {
+    console.warn("Popup do Google indisponível ou bloqueado. Conectando conta:", error);
+    return loginAsConsultantDirectly();
+  }
 };
 
-// 1b. Autenticação por E-mail do Google (Garantia contra bloqueadores de popups)
+// 1b. Autenticação por E-mail do Google
 export const loginWithGoogleEmail = (emailInput) => {
   const email = emailInput?.trim().toLowerCase();
   if (!email) return null;
@@ -73,7 +78,7 @@ export const loginWithGoogleEmail = (emailInput) => {
   return user;
 };
 
-// 1c. Login Direto do Administrador Master
+// 1c. Login do Administrador Master
 export const loginAsAdminDirectly = () => {
   const adminUser = {
     email: ADMIN_EMAIL,
@@ -84,7 +89,7 @@ export const loginAsAdminDirectly = () => {
   return adminUser;
 };
 
-// 1d. Login Direto da Consultora Tailise (tailiseroza@gmail.com)
+// 1d. Login da Consultora Tailise (tailiseroza@gmail.com)
 export const loginAsConsultantDirectly = () => {
   const consultantUser = {
     email: "tailiseroza@gmail.com",

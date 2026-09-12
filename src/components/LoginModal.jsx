@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
-import { Sparkles, ShieldCheck, LogOut, X, Mail } from 'lucide-react';
-import { loginWithGoogle, loginWithGoogleEmail, logoutUser, ADMIN_EMAIL } from '../services/firebase';
+import { Sparkles, ShieldCheck, LogOut, X } from 'lucide-react';
+import { loginWithGoogle, logoutUser, ADMIN_EMAIL } from '../services/firebase';
 
 export default function LoginModal({ isOpen, onClose, currentUser, onLoginSuccess, onLogoutSuccess }) {
-  const [emailInput, setEmailInput] = useState('');
-  const [errorText, setErrorText] = useState('');
   const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleGoogleAuthPopup = async () => {
+  const handleGoogleAuth = async () => {
     setLoading(true);
-    setErrorText('');
     try {
       const user = await loginWithGoogle();
       if (user && onLoginSuccess) {
@@ -19,33 +16,10 @@ export default function LoginModal({ isOpen, onClose, currentUser, onLoginSucces
         onClose();
       }
     } catch (err) {
-      console.warn("Popup do Google indisponível:", err);
-      if (emailInput && emailInput.trim()) {
-        handleEmailSubmitDirect(emailInput);
-      } else {
-        setErrorText("Por favor, digite seu e-mail do Google no campo acima para entrar.");
-      }
+      console.error("Erro na autenticação:", err);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleEmailSubmitDirect = (email) => {
-    const cleanEmail = email?.trim().toLowerCase();
-    if (!cleanEmail) {
-      setErrorText("Por favor, digite seu e-mail do Google.");
-      return;
-    }
-    const user = loginWithGoogleEmail(cleanEmail);
-    if (user && onLoginSuccess) {
-      onLoginSuccess(user);
-      onClose();
-    }
-  };
-
-  const handleSubmitForm = (e) => {
-    e.preventDefault();
-    handleEmailSubmitDirect(emailInput);
   };
 
   const handleLogout = async () => {
@@ -78,7 +52,7 @@ export default function LoginModal({ isOpen, onClose, currentUser, onLoginSucces
         {/* Top Banner */}
         <div className="mk-gold-gradient -mx-6 -mt-6 p-6 text-white text-center space-y-1">
           <Sparkles className="w-8 h-8 mx-auto animate-bounce" />
-          <h3 className="text-xl font-bold font-serif-mk">Painel de Login & Autenticação</h3>
+          <h3 className="text-xl font-bold font-serif-mk">Autenticação com o Google</h3>
           <p className="text-xs text-white/90">Gestão de Conta do Sistema Mary Kay® Cloud</p>
         </div>
 
@@ -119,75 +93,32 @@ export default function LoginModal({ isOpen, onClose, currentUser, onLoginSucces
                 <LogOut className="w-5 h-5" />
                 <span>🔴 SAIR DA CONTA (LOGOUT)</span>
               </button>
-
-              <button
-                onClick={onClose}
-                className="text-xs text-gray-500 hover:text-gray-700 font-semibold cursor-pointer underline"
-              >
-                Fechar / Voltar ao Sistema
-              </button>
             </div>
           </div>
         ) : (
-          /* NÃO CONECTADO: Autenticação Direta com o Google */
-          <div className="space-y-5 text-left">
-            <div className="bg-[#FAF7F5] p-4 rounded-2xl border border-[#E899AC]/30 space-y-1.5 text-xs">
-              <div className="flex items-center gap-2 text-gray-900 font-bold">
-                <ShieldCheck className="w-4 h-4 text-[#B76E79]" />
-                <span>Autenticação de Conta Google</span>
-              </div>
-              <p className="text-gray-600 text-[11px] leading-relaxed">
-                Faça login com sua conta do Google para acessar seu painel de vendas e pronta-entrega.
+          /* NÃO CONECTADO: Apenas 1 Botão Limpo de Login com o Google */
+          <div className="space-y-6 py-2">
+            <div className="bg-[#FAF7F5] p-5 rounded-2xl border border-[#E899AC]/30 space-y-2 text-center text-xs">
+              <ShieldCheck className="w-6 h-6 text-[#B76E79] mx-auto" />
+              <h4 className="font-bold text-gray-900 text-sm">Acesse sua Conta</h4>
+              <p className="text-gray-600 text-xs leading-relaxed">
+                Clique no botão abaixo para entrar instantaneamente com sua conta do Google.
               </p>
             </div>
 
-            {/* Formulário de E-mail do Google */}
-            <form onSubmit={handleSubmitForm} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-gray-700 block">
-                  E-mail da sua Conta do Google:
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
-                  <input
-                    type="email"
-                    value={emailInput}
-                    onChange={(e) => {
-                      setEmailInput(e.target.value);
-                      setErrorText('');
-                    }}
-                    placeholder="seu_email@gmail.com"
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-[#E899AC] focus:border-[#E899AC] outline-none"
-                    required
-                    autoFocus
-                  />
-                </div>
-                {errorText && (
-                  <p className="text-[11px] text-red-600 font-semibold pt-0.5">{errorText}</p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                className="w-full mk-gold-gradient hover:opacity-95 text-white font-bold py-3.5 px-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                </svg>
-                <span>🔑 Entrar com o Google</span>
-              </button>
-            </form>
-
-            <div className="pt-1 text-center">
-              <button
-                type="button"
-                onClick={handleGoogleAuthPopup}
-                disabled={loading}
-                className="text-xs text-[#B76E79] hover:underline font-semibold cursor-pointer"
-              >
-                {loading ? 'Conectando...' : 'Ou tentar via Popup do Google'}
-              </button>
-            </div>
+            <button
+              onClick={handleGoogleAuth}
+              disabled={loading}
+              className="w-full bg-white hover:bg-gray-50 text-gray-900 font-extrabold py-4 px-5 rounded-2xl border border-gray-300 shadow-xl transition-all flex items-center justify-center gap-3 text-base cursor-pointer group hover:border-[#E899AC] hover:scale-[1.02] disabled:opacity-60"
+            >
+              <svg className="w-6 h-6 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+              </svg>
+              <span>{loading ? 'Conectando ao Google...' : '🔑 Entrar com o Google'}</span>
+            </button>
           </div>
         )}
 
