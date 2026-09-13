@@ -25,6 +25,14 @@ import { fetchAllVtexProductsClient, fetchVtexProductBySkuClient } from './servi
 import { subscribeToAuth, logoutUser, isUserAdmin, ADMIN_EMAIL } from './services/firebase';
 import { saveToCloud, fetchFromCloud } from './services/cloudSync';
 
+const safeFetch = async (url, options) => {
+  const isLocalBackend = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  if (!isLocalBackend && typeof url === 'string' && url.startsWith('/api/')) {
+    return { ok: false, status: 404, json: async () => ({}) };
+  }
+  return fetch(url, options);
+};
+
 export default function App() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -155,23 +163,26 @@ export default function App() {
       setLoading(false);
     }
 
-    // 2. Consultar servidor backend local se disponível
-    try {
-      const res = await fetch('/api/data');
-      if (res.ok) {
-        const json = await res.json();
-        if (!localData || (json.clients && json.clients.length >= (localData.clients?.length || 0))) {
-          setData(json);
-          localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(json));
-          if (json.carts && json.carts.length > 0 && !activeCartId) {
-            setActiveCartId(json.carts[0].id);
+    // 2. Consultar servidor backend local apenas se disponível no host local
+    const isLocalBackend = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    if (isLocalBackend) {
+      try {
+        const res = await safeFetch('/api/data');
+        if (res.ok) {
+          const json = await res.json();
+          if (!localData || (json.clients && json.clients.length >= (localData.clients?.length || 0))) {
+            setData(json);
+            localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(json));
+            if (json.carts && json.carts.length > 0 && !activeCartId) {
+              setActiveCartId(json.carts[0].id);
+            }
           }
+          setLoading(false);
+          return;
         }
-        setLoading(false);
-        return;
+      } catch (err) {
+        console.log('Ambiente estático ou offline. Carregando dados locais/nuvem.');
       }
-    } catch (err) {
-      console.log('Ambiente estático ou offline. Carregando dados locais/nuvem.');
     }
 
     // 3. Fallback em nuvem caso não haja nada salvo localmente
@@ -199,21 +210,24 @@ export default function App() {
   // 1. Sincronizar catálogo Mary Kay (Via API Pública VTEX)
   const handleSyncCatalog = async () => {
     setIsSyncing(true);
-    try {
-      // 1. Tentar sincronização via API do servidor local se ativo
-      const res = await fetch('/api/sync-mk', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: '@Tata8282selena' })
-      });
-      if (res.ok) {
-        const json = await res.json();
-        showToast(json.message || 'Catálogo Mary Kay® sincronizado via API VTEX com sucesso!');
-        await fetchData();
-        return;
+    const isLocalBackend = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    if (isLocalBackend) {
+      try {
+        // 1. Tentar sincronização via API do servidor local se ativo
+        const res = await fetch('/api/sync-mk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: '@Tata8282selena' })
+        });
+        if (res.ok) {
+          const json = await res.json();
+          showToast(json.message || 'Catálogo Mary Kay® sincronizado via API VTEX com sucesso!');
+          await fetchData();
+          return;
+        }
+      } catch (err) {
+        console.log('Servidor backend offline. Sincronizando catálogo diretamente pela API VTEX...');
       }
-    } catch (err) {
-      console.log('Servidor backend offline. Sincronizando catálogo diretamente pela API VTEX...');
     }
 
     // 2. Sincronização direta via API VTEX pelo cliente
@@ -264,7 +278,7 @@ export default function App() {
       showToast('Ficha da cliente salva com sucesso!');
 
       try {
-        await fetch('/api/clients', {
+        await safeFetch('/api/clients', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(clientData)
@@ -296,7 +310,7 @@ export default function App() {
       showToast(`Cliente "${clientName}" removida com sucesso.`);
 
       try {
-        await fetch(`/api/clients/${clientId}`, { method: 'DELETE' });
+        await safeFetch(`/api/clients/${clientId}`, { method: 'DELETE' });
       } catch (e) {}
     } catch (err) {
       console.error('Erro ao remover cliente:', err);
@@ -329,7 +343,7 @@ export default function App() {
       showToast(`Novo carrinho criado para ${client.name}!`);
 
       try {
-        await fetch('/api/carts', {
+        await safeFetch('/api/carts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newCart)
@@ -352,7 +366,7 @@ export default function App() {
       await saveToCloud(newData);
 
       try {
-        await fetch('/api/carts', {
+        await safeFetch('/api/carts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(cartData)
@@ -387,7 +401,7 @@ export default function App() {
       showToast('Carrinho removido com sucesso.');
 
       try {
-        await fetch(`/api/carts/${cartId}`, { method: 'DELETE' });
+        await safeFetch(`/api/carts/${cartId}`, { method: 'DELETE' });
       } catch (e) {}
     } catch (err) {
       console.error('Erro ao remover carrinho:', err);
@@ -406,7 +420,7 @@ export default function App() {
       showToast('Foto do produto atualizada!');
 
       try {
-        await fetch('/api/products/update-image', {
+        await safeFetch('/api/products/update-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productId, newImageUrl })
@@ -427,7 +441,7 @@ export default function App() {
       showToast('Configurações salvas!');
 
       try {
-        await fetch('/api/settings', {
+        await safeFetch('/api/settings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(settingsData)
@@ -458,7 +472,7 @@ export default function App() {
       showToast('Preços do produto atualizados!');
 
       try {
-        await fetch('/api/products/update-pricing', {
+        await safeFetch('/api/products/update-pricing', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ productId, price, costPrice })
@@ -492,7 +506,7 @@ export default function App() {
       showToast('Novo produto cadastrado no catálogo!');
 
       try {
-        await fetch('/api/products/add', {
+        await safeFetch('/api/products/add', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(productData)
@@ -513,7 +527,7 @@ export default function App() {
 
     // 1. Tentar buscar via API Backend se estiver em execução
     try {
-      const res = await fetch('/api/products/fetch-by-sku', {
+      const res = await safeFetch('/api/products/fetch-by-sku', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sku: cleanSku })
@@ -610,7 +624,7 @@ export default function App() {
 
   // 10. Exportar para Carrinho Oficial
   const handleExportOfficialCart = async (selectedCartIds) => {
-    const res = await fetch('/api/export-official-cart', {
+    const res = await safeFetch('/api/export-official-cart', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cartIds: selectedCartIds })
@@ -621,7 +635,7 @@ export default function App() {
   // 11. Registrar Pagamento / Entrada de Cliente
   const handleRecordPayment = async (paymentData) => {
     try {
-      const res = await fetch('/api/payments', {
+      const res = await safeFetch('/api/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(paymentData)
@@ -638,7 +652,7 @@ export default function App() {
   // 12. Cadastrar Brinde de Fidelidade
   const handleAddReward = async (rewardData) => {
     try {
-      const res = await fetch('/api/rewards', {
+      const res = await safeFetch('/api/rewards', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rewardData)
@@ -655,7 +669,7 @@ export default function App() {
   // 13. Remover Brinde
   const handleDeleteReward = async (rewardId) => {
     try {
-      const res = await fetch(`/api/rewards/${rewardId}`, { method: 'DELETE' });
+      const res = await safeFetch(`/api/rewards/${rewardId}`, { method: 'DELETE' });
       if (res.ok) {
         showToast('Brinde removido.');
         await fetchData();
@@ -668,7 +682,7 @@ export default function App() {
   // 14. Atualizar Estoque Físico Pronta-Entrega
   const handleUpdateInventory = async (productId, stockCount, stockEntryDate) => {
     try {
-      const res = await fetch('/api/inventory/update', {
+      const res = await safeFetch('/api/inventory/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId, stockCount, stockEntryDate })
@@ -720,7 +734,7 @@ export default function App() {
       const targetClient = data?.clients?.find(c => c.id === clientId);
       if (!targetClient) return;
       const updatedClient = { ...targetClient, loyaltyPoints: Math.max(0, newPoints) };
-      const res = await fetch('/api/clients', {
+      const res = await safeFetch('/api/clients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedClient)
@@ -737,7 +751,7 @@ export default function App() {
   // 17. Salvar / Alterar Perfil de Vendedora
   const handleSaveConsultant = async (consultantData) => {
     try {
-      const res = await fetch('/api/consultants', {
+      const res = await safeFetch('/api/consultants', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(consultantData)
@@ -767,7 +781,7 @@ export default function App() {
   // 17b. Aprovação 1-Clique de Consultora pelo Admin
   const handleApproveConsultant = async (consultantId) => {
     try {
-      await fetch('/api/consultants/approve', {
+      await safeFetch('/api/consultants/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ consultantId })
@@ -796,7 +810,7 @@ export default function App() {
   // 18. Alternar Vendedora Ativa
   const handleSelectConsultant = async (consultantId) => {
     try {
-      const res = await fetch('/api/consultants/select', {
+      const res = await safeFetch('/api/consultants/select', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ consultantId })
@@ -821,7 +835,7 @@ export default function App() {
 
     try {
       try {
-        await fetch(`/api/consultants/${consultantId}`, { method: 'DELETE' });
+        await safeFetch(`/api/consultants/${consultantId}`, { method: 'DELETE' });
       } catch (e) {
         // Fallback silencioso em ambiente estático GitHub Pages
       }

@@ -251,15 +251,32 @@ export default function ClientManagement({
                     const clean = val.replace(/\D/g, '');
                     if (clean.length === 8) {
                       try {
-                        const res = await fetch(`/api/cep/${clean}`);
-                        if (res.ok) {
-                          const addr = await res.json();
-                          setCurrentClient(prev => ({
-                            ...prev,
-                            street: addr.rua || prev.street,
-                            neighborhood: addr.bairro || prev.neighborhood,
-                            city: addr.cidade || prev.city
-                          }));
+                        const isLocalBackend = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+                        if (isLocalBackend) {
+                          const res = await fetch(`/api/cep/${clean}`);
+                          if (res.ok) {
+                            const addr = await res.json();
+                            setCurrentClient(prev => ({
+                              ...prev,
+                              street: addr.rua || prev.street,
+                              neighborhood: addr.bairro || prev.neighborhood,
+                              city: addr.cidade || prev.city
+                            }));
+                            return;
+                          }
+                        }
+                        // Fallback gratuito ViaCEP para GitHub Pages / static
+                        const viaRes = await fetch(`https://viacep.com.br/ws/${clean}/json/`);
+                        if (viaRes.ok) {
+                          const addr = await viaRes.json();
+                          if (!addr.erro) {
+                            setCurrentClient(prev => ({
+                              ...prev,
+                              street: addr.logradouro || prev.street,
+                              neighborhood: addr.bairro || prev.neighborhood,
+                              city: addr.localidade || prev.city
+                            }));
+                          }
                         }
                       } catch (err) {
                         console.error('Erro CEP:', err);
