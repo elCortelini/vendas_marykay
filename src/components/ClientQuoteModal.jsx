@@ -65,8 +65,8 @@ export default function ClientQuoteModal({ cart, consultant, client, onClose }) 
   };
 
   const whatsappUrl = formattedPhoneForWa
-    ? `https://api.whatsapp.com/send?phone=${formattedPhoneForWa}&text=${generateWhatsAppText()}`
-    : `https://api.whatsapp.com/send?text=${generateWhatsAppText()}`;
+    ? `https://api.whatsapp.com/send?phone=${formattedPhoneForWa}&text=${generateWhatsAppMessage()}`
+    : `https://api.whatsapp.com/send?text=${generateWhatsAppMessage()}`;
 
   // Download PDF robusto com tratamento de imagens CORS
   const handleDownloadPDF = async () => {

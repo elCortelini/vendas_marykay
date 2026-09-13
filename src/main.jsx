@@ -17,13 +17,20 @@ class ErrorBoundary extends Component {
     console.error('[ErrorBoundary] Erro capturado:', error, errorInfo);
   }
 
-  handleReset = () => {
-    try {
-      localStorage.clear();
-      sessionStorage.clear();
-    } catch (e) {}
+  handleReloadKeepData = () => {
     this.setState({ hasError: false, error: null });
-    window.location.href = window.location.origin + window.location.pathname;
+    window.location.reload();
+  };
+
+  handleFullReset = () => {
+    if (window.confirm("Atenção: Deseja realmente resetar o banco de dados local para os dados iniciais de fábrica?")) {
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {}
+      this.setState({ hasError: false, error: null });
+      window.location.href = window.location.origin + window.location.pathname;
+    }
   };
 
   render() {
@@ -39,15 +46,23 @@ class ErrorBoundary extends Component {
                 Gestor de Vendas Mary Kay®
               </h1>
               <p className="text-xs text-gray-600 leading-relaxed">
-                Foi detectada uma atualização nos dados do navegador. Clique no botão abaixo para restaurar o sistema com segurança.
+                Ocorreu uma pequena oscilação no navegador. Clique abaixo para recarregar preservando todos os seus dados e cadastros.
               </p>
             </div>
-            <button
-              onClick={this.handleReset}
-              className="mk-gold-gradient text-white font-extrabold px-6 py-3.5 rounded-2xl shadow-lg transition-all hover:scale-105 cursor-pointer text-sm w-full"
-            >
-              🔄 Restaurar & Carregar Sistema
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={this.handleReloadKeepData}
+                className="mk-gold-gradient text-white font-extrabold px-6 py-3.5 rounded-2xl shadow-lg transition-all hover:scale-105 cursor-pointer text-sm w-full"
+              >
+                🔄 Recarregar & Preservar Meus Dados
+              </button>
+              <button
+                onClick={this.handleFullReset}
+                className="text-gray-400 hover:text-red-500 font-semibold text-[11px] underline cursor-pointer pt-2 block mx-auto"
+              >
+                ⚠️ Resetar Banco de Dados Local (Dados Iniciais)
+              </button>
+            </div>
           </div>
         </div>
       );
