@@ -13,7 +13,7 @@ export default function InventoryManagerView({
   const [searchTerm, setSearchTerm] = useState('');
   const [skuAddInput, setSkuAddInput] = useState('');
   const [stockAddCount, setStockAddCount] = useState('1');
-  const [selectedFilter, setSelectedFilter] = useState('all'); // 'all', 'inStock', 'outOfStock'
+  const [selectedFilter, setSelectedFilter] = useState('inStock'); // 'inStock', 'all', 'outOfStock'
   const [noticeMessage, setNoticeMessage] = useState(null);
   const [isSearchingSku, setIsSearchingSku] = useState(false);
 
@@ -319,8 +319,22 @@ export default function InventoryManagerView({
           </div>
         </div>
 
-        {/* Tabela/Grid de Produtos */}
+        {/* Tabela/Grid de Produtos com Estoque */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+          {filteredProducts.length === 0 && (
+            <div className="col-span-full text-center py-12 px-4 bg-[#FAF7F5] border border-dashed border-[#E899AC]/50 rounded-3xl space-y-3">
+              <Package className="w-10 h-10 text-[#B76E79] mx-auto opacity-60" />
+              <h4 className="font-serif-mk text-base font-bold text-gray-800">
+                {selectedFilter === 'inStock' ? 'Nenhum produto em estoque físico no momento' : 'Nenhum produto localizado'}
+              </h4>
+              <p className="text-xs text-gray-500 max-w-md mx-auto">
+                {selectedFilter === 'inStock'
+                  ? 'Utilize o campo acima para dar entrada nos produtos que você possui em mãos digitando o código SKU.'
+                  : 'Tente alterar os termos de busca ou selecionar outro filtro.'}
+              </p>
+            </div>
+          )}
+
           {filteredProducts.map(product => {
             const stock = product.stockCount || 0;
             const hasStock = stock > 0;
