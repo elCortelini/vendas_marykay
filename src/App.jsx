@@ -857,10 +857,20 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#FAF7F5] flex flex-col font-sans">
-      {/* Toast Notification */}
+      {/* Toast Notification de Luxo */}
       {notification && (
-        <div className="fixed bottom-5 right-5 z-50 bg-[#1A1A1A] text-white px-5 py-3 rounded-2xl shadow-xl border border-[#E899AC]/40 text-xs font-semibold animate-bounce">
-          {notification}
+        <div className="fixed bottom-6 right-6 z-50 bg-[#1A1A1A]/95 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-[#E899AC]/50 text-xs font-bold backdrop-blur-md flex items-center gap-3 animate-fade-in transition-all">
+          <div className="w-7 h-7 rounded-full bg-[#E899AC]/20 text-[#E899AC] flex items-center justify-center shrink-0">
+            <Sparkles className="w-4 h-4 text-[#E899AC]" />
+          </div>
+          <span>{notification}</span>
+          <button 
+            onClick={() => setNotification(null)}
+            className="text-gray-400 hover:text-white ml-2 cursor-pointer font-bold text-sm"
+            title="Fechar Notificação"
+          >
+            ×
+          </button>
         </div>
       )}
 

@@ -181,9 +181,9 @@ export default function Header({
             {isAdmin && (
               <button
                 onClick={() => setActiveTab('admin')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'admin'
-                    ? 'bg-amber-500 text-gray-950 shadow-md font-black'
+                    ? 'bg-amber-500 text-gray-950 shadow-md font-black ring-2 ring-amber-300'
                     : 'bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300'
                 }`}
               >
@@ -193,10 +193,10 @@ export default function Header({
 
               <button
                 onClick={() => setActiveTab('carts')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'carts'
-                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/30 font-bold ring-2 ring-[#E899AC]/40'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8] hover:text-[#B76E79] border border-gray-200/80'
                 }`}
               >
                 <ShoppingBag className="w-3.5 h-3.5" />
@@ -210,10 +210,10 @@ export default function Header({
 
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'dashboard'
-                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/30 font-bold ring-2 ring-[#E899AC]/40'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8] hover:text-[#B76E79] border border-gray-200/80'
                 }`}
               >
                 <BarChart3 className="w-3.5 h-3.5" />
@@ -222,10 +222,10 @@ export default function Header({
 
               <button
                 onClick={() => setActiveTab('clients')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'clients'
-                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/30 font-bold ring-2 ring-[#E899AC]/40'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8] hover:text-[#B76E79] border border-gray-200/80'
                 }`}
               >
                 <Users className="w-3.5 h-3.5" />
@@ -239,10 +239,10 @@ export default function Header({
 
               <button
                 onClick={() => setActiveTab('inventory')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'inventory'
-                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/30 font-bold ring-2 ring-[#E899AC]/40'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8] hover:text-[#B76E79] border border-gray-200/80'
                 }`}
               >
                 <span>📦 Controle de Estoque</span>
@@ -250,10 +250,10 @@ export default function Header({
 
               <button
                 onClick={() => setActiveTab('catalog')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'catalog'
-                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/30 font-bold ring-2 ring-[#E899AC]/40'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8] hover:text-[#B76E79] border border-gray-200/80'
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5" />
@@ -262,10 +262,10 @@ export default function Header({
 
               <button
                 onClick={() => setActiveTab('kits')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'kits'
-                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/30 font-bold ring-2 ring-[#E899AC]/40'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8] hover:text-[#B76E79] border border-gray-200/80'
                 }`}
               >
                 <span>🎁 Pacotes & Kits</span>
@@ -273,10 +273,10 @@ export default function Header({
 
               <button
                 onClick={() => setActiveTab('loyalty')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'loyalty'
-                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/30 font-bold ring-2 ring-[#E899AC]/40'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8] hover:text-[#B76E79] border border-gray-200/80'
                 }`}
               >
                 <span>💎 Fidelidade VIP</span>
@@ -284,10 +284,10 @@ export default function Header({
 
               <button
                 onClick={() => setActiveTab('financial')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'financial'
-                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/30 font-bold ring-2 ring-[#E899AC]/40'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8] hover:text-[#B76E79] border border-gray-200/80'
                 }`}
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
@@ -296,10 +296,10 @@ export default function Header({
 
               <button
                 onClick={() => setActiveTab('calculator')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'calculator'
-                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/30 font-bold ring-2 ring-[#E899AC]/40'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8] hover:text-[#B76E79] border border-gray-200/80'
                 }`}
               >
                 <Heart className="w-3.5 h-3.5" />
@@ -308,10 +308,10 @@ export default function Header({
 
               <button
                 onClick={() => setActiveTab('settings')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 flex items-center gap-1.5 cursor-pointer ${
                   activeTab === 'settings'
-                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/20 font-bold'
-                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8]/60 hover:text-[#B76E79] border border-gray-100'
+                    ? 'bg-[#E899AC] text-white shadow-md shadow-[#E899AC]/30 font-bold ring-2 ring-[#E899AC]/40'
+                    : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8] hover:text-[#B76E79] border border-gray-200/80'
                 }`}
               >
                 <Settings className="w-3.5 h-3.5" />

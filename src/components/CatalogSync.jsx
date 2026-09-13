@@ -489,7 +489,7 @@ export default function CatalogSync({
           return (
             <div
               key={product.id}
-              className="bg-white rounded-2xl p-4 border border-[#E899AC]/30 mk-card-shadow hover:border-[#E899AC] transition-all flex flex-col justify-between space-y-3 group"
+              className="bg-white rounded-3xl p-4 border border-[#E899AC]/30 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-[#E899AC] transition-all duration-300 flex flex-col justify-between space-y-3 group"
             >
               <div className="space-y-3">
                 <div className="relative overflow-hidden rounded-xl bg-gray-50 h-44 border border-gray-100 flex items-center justify-center">
