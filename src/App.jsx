@@ -819,6 +819,7 @@ export default function App() {
 
             {activeTab === 'settings' && (
               <SettingsPanel
+                isAdmin={isAdmin}
                 consultant={activeConsultant}
                 consultants={data?.consultants || [data?.consultant]}
                 settings={data?.settings}

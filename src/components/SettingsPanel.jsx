@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Save, DollarSign, Truck, Package, ShieldCheck, Sparkles, Edit2, User, Key, Eye, EyeOff, Plus, Trash2, Phone, MapPin, Check } from 'lucide-react';
+import { Settings, Save, DollarSign, Truck, Package, ShieldCheck, Sparkles, Edit2, User, Key, Eye, EyeOff, Plus, Trash2, Phone, MapPin, Check, Upload } from 'lucide-react';
 
 export default function SettingsPanel({
+  isAdmin = false,
   consultant,
   consultants = [],
   settings,
@@ -97,10 +98,12 @@ export default function SettingsPanel({
         <div>
           <h2 className="text-xl font-bold font-serif-mk text-gray-900 flex items-center gap-2">
             <Settings className="w-5 h-5 text-[#B76E79]" />
-            <span>Perfil da Consultora de Beleza & Configurações Mary Kay®</span>
+            <span>{isAdmin ? 'Perfil da Consultora de Beleza & Configurações Mary Kay®' : 'Minhas Configurações & Perfil Mary Kay®'}</span>
           </h2>
           <p className="text-xs text-gray-500 mt-1">
-            Cadastre e edite os dados das consultoras de beleza, chave PIX, foto, logins oficiais e tabela de frete!
+            {isAdmin 
+              ? 'Cadastre e edite os dados das consultoras de beleza, chave PIX, foto, logins oficiais e tabela de frete!' 
+              : 'Edite suas informações pessoais, chave PIX, foto de perfil, dados de acesso e tabela de frete!'}
           </p>
         </div>
       </div>
@@ -136,79 +139,83 @@ export default function SettingsPanel({
           </div>
         </div>
 
-        {/* Card Separado Exclusivo para Cadastrar Nova Consultora de Beleza */}
-        <div className="bg-[#FAF7F5] p-4 rounded-2xl border border-[#E899AC]/40 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#F8E8E8] text-[#B76E79] flex items-center justify-center font-bold">
-              <Plus className="w-5 h-5" />
+        {/* Card Separado Exclusivo para Cadastrar Nova Consultora de Beleza (Apenas Admin) */}
+        {isAdmin && (
+          <>
+            <div className="bg-[#FAF7F5] p-4 rounded-2xl border border-[#E899AC]/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-[#F8E8E8] text-[#B76E79] flex items-center justify-center font-bold">
+                  <Plus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900 text-xs">Cadastrar Outra Consultora de Beleza</h4>
+                  <p className="text-[11px] text-gray-500">Adicione uma nova consultora à rede de vendas do sistema.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setConsultantForm({
+                    id: 'c-' + Date.now(),
+                    name: '',
+                    title: 'Consultora de Beleza Independente Mary Kay®',
+                    region: 'Itajaí e região',
+                    code: '',
+                    phone: '',
+                    pixKey: '',
+                    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
+                    loginMaryKay: '',
+                    passwordMaryKay: ''
+                  });
+                  setIsEditingConsultant(true);
+                }}
+                className="bg-[#1A1A1A] hover:bg-black text-[#E899AC] text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5 shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Cadastrar Nova Consultora</span>
+              </button>
             </div>
-            <div>
-              <h4 className="font-bold text-gray-900 text-xs">Cadastrar Outra Consultora de Beleza</h4>
-              <p className="text-[11px] text-gray-500">Adicione uma nova consultora à rede de vendas do sistema.</p>
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              setConsultantForm({
-                id: 'c-' + Date.now(),
-                name: '',
-                title: 'Consultora de Beleza Independente Mary Kay®',
-                region: 'Itajaí e região',
-                code: '',
-                phone: '',
-                pixKey: '',
-                avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
-                loginMaryKay: '',
-                passwordMaryKay: ''
-              });
-              setIsEditingConsultant(true);
-            }}
-            className="bg-[#1A1A1A] hover:bg-black text-[#E899AC] text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm cursor-pointer flex items-center gap-1.5 shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            <span>+ Cadastrar Nova Consultora</span>
-          </button>
-        </div>
 
-        {/* Seleção de Vendedora Ativa quando houver mais de uma */}
-        {consultants && consultants.length > 1 && (
-          <div className="bg-[#FAF7F5] p-4 rounded-2xl border border-[#E899AC]/30 space-y-2 text-xs">
-            <h4 className="font-bold text-gray-900 flex items-center gap-1.5">
-              <User className="w-4 h-4 text-[#B76E79]" />
-              <span>Vendedoras Cadastradas no Sistema ({consultants.length})</span>
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
-              {consultants.map(c => {
-                const isActive = c.id === consultantForm.id || c.code === consultantForm.code;
-                return (
-                  <div
-                    key={c.id || c.code}
-                    className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-all cursor-pointer ${
-                      isActive ? 'bg-white border-[#E899AC] shadow-md ring-2 ring-[#E899AC]/40' : 'bg-gray-50 border-gray-200 hover:bg-white'
-                    }`}
-                    onClick={() => {
-                      if (onSelectConsultant) onSelectConsultant(c.id);
-                      setConsultantForm(c);
-                    }}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <img src={c.avatar || '/images/tailise_avatar.png'} alt={c.name} className="w-9 h-9 rounded-full object-cover border shrink-0" />
-                      <div>
-                        <h5 className="font-bold text-gray-900 text-xs">{c.name}</h5>
-                        <span className="text-[10px] text-gray-500">Cód: {c.code}</span>
+            {/* Seleção de Vendedora Ativa quando houver mais de uma */}
+            {consultants && consultants.length > 1 && (
+              <div className="bg-[#FAF7F5] p-4 rounded-2xl border border-[#E899AC]/30 space-y-2 text-xs">
+                <h4 className="font-bold text-gray-900 flex items-center gap-1.5">
+                  <User className="w-4 h-4 text-[#B76E79]" />
+                  <span>Vendedoras Cadastradas no Sistema ({consultants.length})</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-1">
+                  {consultants.map(c => {
+                    const isActive = c.id === consultantForm.id || c.code === consultantForm.code;
+                    return (
+                      <div
+                        key={c.id || c.code}
+                        className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-all cursor-pointer ${
+                          isActive ? 'bg-white border-[#E899AC] shadow-md ring-2 ring-[#E899AC]/40' : 'bg-gray-50 border-gray-200 hover:bg-white'
+                        }`}
+                        onClick={() => {
+                          if (onSelectConsultant) onSelectConsultant(c.id);
+                          setConsultantForm(c);
+                        }}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <img src={c.avatar || '/images/tailise_avatar.png'} alt={c.name} className="w-9 h-9 rounded-full object-cover border shrink-0" />
+                          <div>
+                            <h5 className="font-bold text-gray-900 text-xs">{c.name}</h5>
+                            <span className="text-[10px] text-gray-500">Cód: {c.code}</span>
+                          </div>
+                        </div>
+
+                        {isActive && (
+                          <span className="bg-emerald-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">
+                            ATIVA
+                          </span>
+                        )}
                       </div>
-                    </div>
-
-                    {isActive && (
-                      <span className="bg-emerald-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">
-                        ATIVA
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Formulário de Edição de Vendedora */}
@@ -290,15 +297,48 @@ export default function SettingsPanel({
                 />
               </div>
 
-              <div className="sm:col-span-2">
-                <label className="block font-semibold text-gray-700 mb-1">URL da Foto de Perfil / Avatar</label>
-                <input
-                  type="text"
-                  placeholder="Ex: /images/tailise_avatar.png ou link da foto..."
-                  value={consultantForm.avatar}
-                  onChange={(e) => setConsultantForm({ ...consultantForm, avatar: e.target.value })}
-                  className="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E899AC]"
-                />
+              <div className="sm:col-span-2 space-y-2">
+                <label className="block font-semibold text-gray-700 mb-1">Foto de Perfil / Avatar</label>
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <div className="w-14 h-14 rounded-full bg-gray-100 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center shadow-sm">
+                    {consultantForm.avatar ? (
+                      <img src={consultantForm.avatar} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 w-full space-y-2">
+                    <div className="flex items-center gap-2">
+                      <label className="cursor-pointer bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 font-bold text-xs px-3.5 py-2 rounded-xl shadow-sm flex items-center gap-2 transition-all">
+                        <Upload className="w-4 h-4 text-[#B76E79]" />
+                        <span>Carregar Foto do Computador</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setConsultantForm({ ...consultantForm, avatar: reader.result });
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                      </label>
+                      <span className="text-xs text-gray-400 font-medium">ou insira o link/caminho</span>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Ex: /images/tailise_avatar.png ou link..."
+                      value={consultantForm.avatar || ''}
+                      onChange={(e) => setConsultantForm({ ...consultantForm, avatar: e.target.value })}
+                      className="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E899AC] text-xs"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Seção de Login e Senha do Site Oficial Mary Kay */}

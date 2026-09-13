@@ -19,7 +19,9 @@ import {
   TrendingUp,
   Edit2,
   Clock,
-  Check
+  Check,
+  Upload,
+  User
 } from 'lucide-react';
 
 export default function AdminControlPanel({ 
@@ -48,6 +50,7 @@ export default function AdminControlPanel({
     region: 'Itajaí e Região',
     phone: '',
     pixKey: '',
+    avatar: '',
     status: 'approved'
   });
 
@@ -83,6 +86,7 @@ export default function AdminControlPanel({
       region: 'Itajaí e Região',
       phone: '',
       pixKey: '',
+      avatar: '',
       status: 'approved'
     });
   };
@@ -518,6 +522,47 @@ export default function AdminControlPanel({
                 />
               </div>
 
+              <div className="sm:col-span-2 space-y-1.5">
+                <label className="block font-semibold text-gray-700 mb-1">Foto de Perfil / Avatar</label>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center shadow-sm">
+                    {newConsultantForm.avatar ? (
+                      <img src={newConsultantForm.avatar} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-5 h-5 text-gray-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <label className="cursor-pointer bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 font-bold text-xs px-3 py-1.5 rounded-xl shadow-sm inline-flex items-center gap-1.5 transition-all">
+                      <Upload className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Upload do Computador</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setNewConsultantForm({ ...newConsultantForm, avatar: reader.result });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ou cole a URL da imagem..."
+                      value={newConsultantForm.avatar || ''}
+                      onChange={(e) => setNewConsultantForm({ ...newConsultantForm, avatar: e.target.value })}
+                      className="w-full px-3 py-1.5 border rounded-xl focus:ring-2 focus:ring-amber-500 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="sm:col-span-2">
                 <label className="block font-semibold text-gray-700 mb-1">Status da Conta</label>
                 <select
@@ -624,6 +669,47 @@ export default function AdminControlPanel({
                   onChange={(e) => setEditingConsultant({ ...editingConsultant, pixKey: e.target.value })}
                   className="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-amber-500"
                 />
+              </div>
+
+              <div className="sm:col-span-2 space-y-1.5">
+                <label className="block font-semibold text-gray-700 mb-1">Foto de Perfil / Avatar</label>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center shadow-sm">
+                    {editingConsultant.avatar ? (
+                      <img src={editingConsultant.avatar} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-5 h-5 text-gray-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <label className="cursor-pointer bg-white hover:bg-gray-50 text-gray-800 border border-gray-300 font-bold text-xs px-3 py-1.5 rounded-xl shadow-sm inline-flex items-center gap-1.5 transition-all">
+                      <Upload className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Upload do Computador</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setEditingConsultant({ ...editingConsultant, avatar: reader.result });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ou cole a URL da imagem..."
+                      value={editingConsultant.avatar || ''}
+                      onChange={(e) => setEditingConsultant({ ...editingConsultant, avatar: e.target.value })}
+                      className="w-full px-3 py-1.5 border rounded-xl focus:ring-2 focus:ring-amber-500 text-xs"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="sm:col-span-2">

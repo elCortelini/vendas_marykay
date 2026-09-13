@@ -315,7 +315,7 @@ export default function Header({
                 }`}
               >
                 <Settings className="w-3.5 h-3.5" />
-                <span>👩‍💼 Vendedoras & Configurações</span>
+                <span>{isAdmin ? '🛡️ Vendedoras & Configurações' : '⚙️ Configurações'}</span>
               </button>
           </nav>
         )}
