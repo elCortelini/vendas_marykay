@@ -33,6 +33,22 @@ const safeFetch = async (url, options) => {
   return fetch(url, options);
 };
 
+const normalizeDb = (raw) => {
+  if (!raw || typeof raw !== 'object') return defaultDb;
+  return {
+    ...defaultDb,
+    ...raw,
+    products: (Array.isArray(raw.products) && raw.products.length > 0) ? raw.products : defaultDb.products,
+    clients: Array.isArray(raw.clients) ? raw.clients : defaultDb.clients,
+    carts: Array.isArray(raw.carts) ? raw.carts : defaultDb.carts,
+    categories: (Array.isArray(raw.categories) && raw.categories.length > 0) ? raw.categories : defaultDb.categories,
+    consultants: (Array.isArray(raw.consultants) && raw.consultants.length > 0) ? raw.consultants : defaultDb.consultants,
+    settings: { ...defaultDb.settings, ...(raw.settings || {}) },
+    payments: Array.isArray(raw.payments) ? raw.payments : defaultDb.payments,
+    rewards: Array.isArray(raw.rewards) ? raw.rewards : defaultDb.rewards
+  };
+};
+
 export default function App() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -156,9 +172,10 @@ export default function App() {
     }
 
     if (localData) {
-      setData(localData);
-      if (localData.carts && localData.carts.length > 0 && !activeCartId) {
-        setActiveCartId(localData.carts[0].id);
+      const normalized = normalizeDb(localData);
+      setData(normalized);
+      if (normalized.carts && normalized.carts.length > 0 && !activeCartId) {
+        setActiveCartId(normalized.carts[0].id);
       }
       setLoading(false);
     }
@@ -170,12 +187,11 @@ export default function App() {
         const res = await safeFetch('/api/data');
         if (res.ok) {
           const json = await res.json();
-          if (!localData || (json.clients && json.clients.length >= (localData.clients?.length || 0))) {
-            setData(json);
-            localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(json));
-            if (json.carts && json.carts.length > 0 && !activeCartId) {
-              setActiveCartId(json.carts[0].id);
-            }
+          const normalized = normalizeDb(json);
+          setData(normalized);
+          localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(normalized));
+          if (normalized.carts && normalized.carts.length > 0 && !activeCartId) {
+            setActiveCartId(normalized.carts[0].id);
           }
           setLoading(false);
           return;
@@ -188,7 +204,7 @@ export default function App() {
     // 3. Fallback em nuvem caso não haja nada salvo localmente
     if (!localData) {
       const cloudData = await fetchFromCloud();
-      const loadedData = cloudData || defaultDb;
+      const loadedData = normalizeDb(cloudData || defaultDb);
       setData(loadedData);
       localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(loadedData));
       if (loadedData.carts && loadedData.carts.length > 0 && !activeCartId) {
