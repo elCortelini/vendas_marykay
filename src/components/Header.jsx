@@ -147,8 +147,8 @@ export default function Header({
             <button
               onClick={onSyncCatalog}
               disabled={isSyncing}
-              className="mk-glass hover:bg-[#F8E8E8] text-[#B76E79] text-xs font-semibold px-3.5 py-2 rounded-xl border border-[#E899AC]/40 transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
-              title="Sincronizar preços e produtos do site oficial Mary Kay"
+              className="bg-[#F8E8E8] hover:bg-[#E899AC] text-[#B76E79] hover:text-white text-xs font-bold px-3.5 py-2 rounded-xl border border-[#E899AC]/50 transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
+              title="Sincronizar catálogo Mary Kay® via VTEX API em tempo real"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
               <span>{isSyncing ? 'Sincronizando...' : 'Sincronizar MK'}</span>

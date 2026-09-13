@@ -152,15 +152,6 @@ export default function CatalogSync({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Botão de Pacotes & Kits */}
-          <button
-            onClick={onOpenKitsModal}
-            className="bg-[#1A1A1A] hover:bg-black text-[#E899AC] text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-sm border border-[#E899AC]/30"
-          >
-            <Package className="w-4 h-4 text-[#E899AC]" />
-            <span>Pacotes & Kits</span>
-          </button>
-
           <button
             onClick={onOpenFlyerModal}
             className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
@@ -168,56 +159,7 @@ export default function CatalogSync({
             <Sparkles className="w-4 h-4 text-emerald-200" />
             <span>Gerar Panfleto</span>
           </button>
-
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="bg-[#F8E8E8] hover:bg-[#E899AC] text-[#B76E79] hover:text-white text-xs font-semibold px-3.5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>+ Adicionar Produto</span>
-          </button>
-
-          <button
-            onClick={onSyncCatalog}
-            disabled={isSyncing}
-            className="mk-gold-gradient text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-md hover:opacity-95 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Sincronizando...' : 'Sincronizar EmSintonia'}</span>
-          </button>
         </div>
-      </div>
-
-      {/* Banner de Estoque Pronta-Entrega da Consultora */}
-      <div className="bg-[#FAF7F5] border border-[#E899AC]/40 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full mk-gold-gradient text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-            <Box className="w-5 h-5" />
-          </div>
-          <div>
-            <h4 className="font-bold text-gray-900 text-xs flex items-center gap-1.5">
-              <span>Seu Estoque Físico (Pronta-Entrega)</span>
-              <span className="bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
-                {totalStockUnits} unidades em mãos
-              </span>
-            </h4>
-            <p className="text-[11px] text-gray-500 mt-0.5">
-              Valor total em estoque físico: <strong className="text-gray-900">R$ {totalStockRetailValue.toFixed(2)}</strong> em produtos a pronta-entrega.
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={() => setShowOnlyInStock(!showOnlyInStock)}
-          className={`px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm text-xs ${
-            showOnlyInStock
-              ? 'bg-[#1A1A1A] text-[#E899AC] border border-[#E899AC]/40'
-              : 'bg-white text-gray-700 hover:bg-[#F8E8E8] border border-gray-200'
-          }`}
-        >
-          <Box className="w-4 h-4 text-[#B76E79]" />
-          <span>{showOnlyInStock ? 'Exibindo: Apenas Pronta-Entrega' : 'Filtrar Pronta-Entrega'}</span>
-        </button>
       </div>
 
       {/* FERRAMENTA PRINCIPAL: BUSCA POR CÓDIGO SKU NA API PÚBLICA VTEX */}
