@@ -89,11 +89,13 @@ export default function MultiCart({
   const totalFinal = Math.max(0, subtotal - discountVal + (currentCart?.shippingFee || 0));
   const estimatedProfit = totalFinal - totalCost;
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-    p.sku.includes(productSearch) ||
-    p.category.toLowerCase().includes(productSearch.toLowerCase())
-  );
+  const filteredProducts = (products || []).filter(p => {
+    if (!p) return false;
+    const search = (productSearch || '').toLowerCase();
+    return (p.name || '').toLowerCase().includes(search) ||
+           (p.sku || '').toLowerCase().includes(search) ||
+           (p.category || '').toLowerCase().includes(search);
+  });
 
   return (
     <div className="space-y-6">

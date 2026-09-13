@@ -27,12 +27,14 @@ export default function ClientManagement({
     wishlist: []
   });
 
-  const filteredClients = clients.filter(c =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.skinTone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.phone?.includes(searchTerm)
-  );
+  const filteredClients = (clients || []).filter(c => {
+    if (!c) return false;
+    const search = (searchTerm || '').toLowerCase();
+    return (c.name || '').toLowerCase().includes(search) ||
+           (c.city || '').toLowerCase().includes(search) ||
+           (c.skinTone || '').toLowerCase().includes(search) ||
+           (c.phone || '').includes(search);
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();

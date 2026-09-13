@@ -57,6 +57,15 @@ const normalizeDb = (raw) => {
   };
 };
 
+const saveLocalData = (newData) => {
+  if (!newData) return;
+  try {
+    const jsonStr = JSON.stringify(newData);
+    localStorage.setItem('vendas_marykay_cloud_master_db_v1', jsonStr);
+    localStorage.setItem('mk_app_data', jsonStr);
+  } catch (e) {}
+};
+
 export default function App() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -197,7 +206,7 @@ export default function App() {
           const json = await res.json();
           const normalized = normalizeDb(json);
           setData(normalized);
-          localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(normalized));
+          saveLocalData(normalized);
           if (normalized.carts && normalized.carts.length > 0 && !activeCartId) {
             setActiveCartId(normalized.carts[0].id);
           }
@@ -214,7 +223,7 @@ export default function App() {
       const cloudData = await fetchFromCloud();
       const loadedData = normalizeDb(cloudData || defaultDb);
       setData(loadedData);
-      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(loadedData));
+      saveLocalData(loadedData);
       if (loadedData.carts && loadedData.carts.length > 0 && !activeCartId) {
         setActiveCartId(loadedData.carts[0].id);
       }
@@ -265,7 +274,7 @@ export default function App() {
         const updatedProducts = Array.from(existingProductsMap.values());
         const newData = { ...data, products: updatedProducts };
         setData(newData);
-        localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+        saveLocalData(newData);
         await saveToCloud(newData);
 
         showToast(`Catálogo Mary Kay® Sincronizado via VTEX API! ${vtexProducts.length} produtos oficiais atualizados em tempo real!`);
@@ -296,7 +305,7 @@ export default function App() {
 
       const newData = { ...data, clients: updatedClients };
       setData(newData);
-      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      saveLocalData(newData);
       await saveToCloud(newData);
 
       showToast('Ficha da cliente salva com sucesso!');
@@ -328,7 +337,7 @@ export default function App() {
       const updatedCarts = (data?.carts || []).filter(c => c.clientId !== clientId);
       const newData = { ...data, clients: updatedClients, carts: updatedCarts };
       setData(newData);
-      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      saveLocalData(newData);
       await saveToCloud(newData);
 
       showToast(`Cliente "${clientName}" removida com sucesso.`);
@@ -360,7 +369,7 @@ export default function App() {
       const updatedCarts = [...(data?.carts || []), newCart];
       const newData = { ...data, carts: updatedCarts };
       setData(newData);
-      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      saveLocalData(newData);
       await saveToCloud(newData);
       setActiveCartId(newCart.id);
       setActiveTab('carts');
@@ -386,7 +395,7 @@ export default function App() {
       const updatedCarts = (data?.carts || []).map(c => c.id === cartData.id ? cartData : c);
       const newData = { ...data, carts: updatedCarts };
       setData(newData);
-      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      saveLocalData(newData);
       await saveToCloud(newData);
 
       try {
@@ -414,7 +423,7 @@ export default function App() {
       const updatedCarts = (data?.carts || []).filter(c => c.id !== cartId);
       const newData = { ...data, carts: updatedCarts };
       setData(newData);
-      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      saveLocalData(newData);
       await saveToCloud(newData);
 
       if (activeCartId === cartId) {
@@ -439,7 +448,7 @@ export default function App() {
       const updatedProducts = (data?.products || []).map(p => p.id === productId ? { ...p, image: newImageUrl } : p);
       const newData = { ...data, products: updatedProducts };
       setData(newData);
-      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      saveLocalData(newData);
       await saveToCloud(newData);
       showToast('Foto do produto atualizada!');
 
@@ -460,7 +469,7 @@ export default function App() {
     try {
       const newData = { ...data, settings: { ...data?.settings, ...settingsData } };
       setData(newData);
-      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      saveLocalData(newData);
       await saveToCloud(newData);
       showToast('Configurações salvas!');
 
@@ -491,7 +500,7 @@ export default function App() {
       });
       const newData = { ...data, products: updatedProducts };
       setData(newData);
-      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      saveLocalData(newData);
       await saveToCloud(newData);
       showToast('Preços do produto atualizados!');
 
@@ -525,7 +534,7 @@ export default function App() {
       const updatedProducts = [newProduct, ...(data?.products || [])];
       const newData = { ...data, products: updatedProducts };
       setData(newData);
-      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      saveLocalData(newData);
       await saveToCloud(newData);
       showToast('Novo produto cadastrado no catálogo!');
 
@@ -585,7 +594,7 @@ export default function App() {
 
         const newData = { ...data, products: updatedProducts };
         setData(newData);
-        localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+        saveLocalData(newData);
         await saveToCloud(newData);
 
         showToast(`⚡ Produto #${cleanSku} ("${vtexProduct.name}") obtido diretamente da API VTEX! (R$ ${vtexProduct.price.toFixed(2)})`);
@@ -639,7 +648,7 @@ export default function App() {
     const updatedProducts = [newProduct, ...currentProducts];
     const newData = { ...data, products: updatedProducts };
     setData(newData);
-    localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+    saveLocalData(newData);
     await saveToCloud(newData);
 
     showToast(`Produto #${cleanSku} ("${newProduct.name}") cadastrado no catálogo!`);
@@ -872,7 +881,7 @@ export default function App() {
       };
       
       setData(newData);
-      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      saveLocalData(newData);
       await saveToCloud(newData);
 
       showToast(`Vendedora "${consultantName}" removida com sucesso.`);

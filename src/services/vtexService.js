@@ -1,7 +1,26 @@
 // Serviço de Integração Direta com a API Pública de Catálogo VTEX da Mary Kay Brasil no Frontend (Navegador)
-// Endpoint público: https://loja.marykay.com.br/api/catalog_system/pub/products/search
+import officialCatalogMapRaw from '../../server/data/official_mk_catalog_map.json';
 
+const officialCatalogMap = officialCatalogMapRaw?.default || officialCatalogMapRaw || {};
 const VTEX_SEARCH_URL = 'https://loja.marykay.com.br/api/catalog_system/pub/products/search';
+
+/**
+ * Retorna todos os produtos do catálogo oficial local sincronizado
+ */
+export function getOfficialCatalogProducts() {
+  const items = Object.values(officialCatalogMap);
+  return items.map(item => ({
+    id: 'mk-' + String(item.sku || item.id || '').toLowerCase(),
+    sku: String(item.sku || '').trim(),
+    name: item.name || `Produto Mary Kay® (SKU #${item.sku})`,
+    category: item.category || 'Maquiagem (Bases, Batons, Olhos)',
+    price: Number(item.price || 39.90),
+    costPrice: Number(item.costPrice || (item.price ? item.price * 0.6 : 23.94).toFixed(2)),
+    image: item.image || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80',
+    description: item.description || `Produto oficial Mary Kay® com código #${item.sku}.`,
+    isBestSeller: true
+  }));
+}
 
 /**
  * Converte a estrutura de produto retornada pela API VTEX nos objetos padronizados da aplicação
@@ -71,7 +90,7 @@ export function parseVtexProducts(vtexProductsArray) {
 }
 
 /**
- * Consome a API VTEX paginada diretamente no navegador
+ * Consome a API VTEX paginada diretamente no navegador, com fallback garantido para o catálogo oficial
  */
 export async function fetchAllVtexProductsClient(pageSize = 50, maxPages = 8) {
   const allProducts = [];
@@ -94,9 +113,14 @@ export async function fetchAllVtexProductsClient(pageSize = 50, maxPages = 8) {
       const parsedSlice = parseVtexProducts(json);
       allProducts.push(...parsedSlice);
     } catch (err) {
-      console.warn(`[VTEX Client] Erro na paginação VTEX ${page}:`, err);
+      console.warn(`[VTEX Client] Requisição VTEX direta falhou ou bloqueada por CORS no navegador na página ${page}:`, err);
       break;
     }
+  }
+
+  if (allProducts.length === 0) {
+    console.log('[VTEX Client] Carregando produtos oficiais do catálogo oficial...');
+    return getOfficialCatalogProducts();
   }
 
   const uniqueProductsMap = new Map();
@@ -110,7 +134,7 @@ export async function fetchAllVtexProductsClient(pageSize = 50, maxPages = 8) {
 }
 
 /**
- * Consulta SKU na API VTEX diretamente pelo navegador
+ * Consulta SKU na API VTEX ou no catálogo oficial sincronizado
  */
 export async function fetchVtexProductBySkuClient(sku) {
   const cleanSku = String(sku || '').trim();

@@ -46,28 +46,30 @@ export default function CatalogSync({
   const totalStockUnits = inStockProducts.reduce((sum, p) => sum + (p.stockCount || p.stock || 0), 0);
   const totalStockRetailValue = inStockProducts.reduce((sum, p) => sum + (p.price * (p.stockCount || p.stock || 0)), 0);
 
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = (products || []).filter(product => {
+    if (!product) return false;
     const stockQty = product.stockCount || product.stock || 0;
     if (showOnlyInStock && stockQty <= 0) return false;
 
-    const cleanSearch = searchTerm.trim().toLowerCase();
+    const cleanSearch = (searchTerm || '').trim().toLowerCase();
     if (!cleanSearch) {
       return selectedCategory === 'Todas' || product.category === selectedCategory;
     }
 
     const cleanDigits = cleanSearch.replace(/\D/g, '');
-    const prodDigits = product.sku ? product.sku.replace(/\D/g, '') : '';
+    const prodSku = (product.sku || '').toLowerCase();
+    const prodDigits = product.sku ? String(product.sku).replace(/\D/g, '') : '';
     
     // Se a busca for numérica (Código SKU oficial)
     if (cleanDigits && cleanDigits.length >= 3) {
-      if (product.sku.toLowerCase() === cleanSearch || prodDigits === cleanDigits) {
-        return true; // Correspondência exata por Código Oficial
+      if (prodSku === cleanSearch || prodDigits === cleanDigits) {
+        return true;
       }
     }
 
-    const matchesSearch = product.name.toLowerCase().includes(cleanSearch) ||
-                          product.sku.toLowerCase().includes(cleanSearch) ||
-                          (product.description && product.description.toLowerCase().includes(cleanSearch));
+    const matchesSearch = (product.name || '').toLowerCase().includes(cleanSearch) ||
+                          prodSku.includes(cleanSearch) ||
+                          (product.description || '').toLowerCase().includes(cleanSearch);
     const matchesCategory = selectedCategory === 'Todas' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
