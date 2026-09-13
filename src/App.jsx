@@ -22,7 +22,7 @@ import SelfRegisterModal from './components/SelfRegisterModal';
 import PublicLandingView from './components/PublicLandingView';
 import defaultDbRaw from '../server/data/db.json';
 import officialCatalogMapRaw from '../server/data/official_mk_catalog_map.json';
-import { fetchAllVtexProductsClient, fetchVtexProductBySkuClient } from './services/vtexService';
+import { fetchAllVtexProductsClient, fetchVtexProductBySkuClient, getOfficialCatalogProducts } from './services/vtexService';
 import { subscribeToAuth, logoutUser, isUserAdmin, ADMIN_EMAIL } from './services/firebase';
 import { saveToCloud, fetchFromCloud } from './services/cloudSync';
 
@@ -118,14 +118,61 @@ const safeFetch = async (url, options) => {
   return fetch(url, options);
 };
 
+const enrichProductsWithOfficialData = (productsList = []) => {
+  const officialList = getOfficialCatalogProducts();
+  const mapBySku = new Map();
+  const mapById = new Map();
+
+  officialList.forEach(p => {
+    if (p.sku) mapBySku.set(String(p.sku).trim().toUpperCase(), p);
+    if (p.id) mapById.set(p.id, p);
+  });
+
+  const resultMap = new Map();
+
+  // 1. Semeia primeiro com o catálogo completo oficial
+  officialList.forEach(p => {
+    const key = p.sku ? String(p.sku).trim().toUpperCase() : p.id;
+    resultMap.set(key, p);
+  });
+
+  // 2. Sobrepõe produtos existentes mantendo estoque físico, edições de preço e dados customizados
+  (productsList || []).forEach(p => {
+    const skuKey = p.sku ? String(p.sku).trim().toUpperCase() : null;
+    const matchedOfficial = (skuKey && mapBySku.get(skuKey)) || (p.id && mapById.get(p.id));
+    const mainKey = skuKey || p.id;
+
+    let updatedImage = p.image;
+    if (matchedOfficial && matchedOfficial.image && (!updatedImage || updatedImage.includes('unsplash.com'))) {
+      updatedImage = matchedOfficial.image;
+    }
+
+    const merged = {
+      ...(matchedOfficial || {}),
+      ...p,
+      image: updatedImage || matchedOfficial?.image || p.image,
+      name: (p.name && !p.name.startsWith('Produto Mary Kay® (Código')) ? p.name : (matchedOfficial?.name || p.name),
+      price: p.price || matchedOfficial?.price || 39.90,
+      costPrice: p.costPrice || matchedOfficial?.costPrice || ((p.price || 39.90) * 0.6)
+    };
+
+    resultMap.set(mainKey, merged);
+  });
+
+  return Array.from(resultMap.values());
+};
+
 const normalizeDb = (raw) => {
   const source = (raw && typeof raw === 'object') ? (raw.default || raw) : defaultDb;
+  const rawProducts = safeArray(source.products, defaultDb.products);
+  const enrichedProducts = enrichProductsWithOfficialData(rawProducts);
+
   return {
     consultant: source.consultant || defaultDb.consultant || null,
     consultants: safeArray(source.consultants, defaultDb.consultants),
     settings: { ...(defaultDb.settings || {}), ...(source.settings || {}) },
     categories: safeArray(source.categories, defaultDb.categories),
-    products: safeArray(source.products, defaultDb.products),
+    products: enrichedProducts,
     clients: safeArray(source.clients, defaultDb.clients),
     carts: safeArray(source.carts, defaultDb.carts),
     payments: safeArray(source.payments, defaultDb.payments),
@@ -340,30 +387,32 @@ export default function App() {
       }
     }
 
-    // 2. Sincronização direta via API VTEX pelo cliente
+    // 2. Sincronização direta via API VTEX pelo cliente + Catálogo Oficial
     try {
-      const vtexProducts = await fetchAllVtexProductsClient(50, 8);
-      if (vtexProducts && vtexProducts.length > 0) {
-        const existingProductsMap = new Map();
-        (data?.products || []).forEach(p => existingProductsMap.set(p.sku, p));
-        vtexProducts.forEach(p => existingProductsMap.set(p.sku, p));
+      let vtexProducts = [];
+      try {
+        vtexProducts = await fetchAllVtexProductsClient(50, 8);
+      } catch (e) {}
 
-        const updatedProducts = Array.from(existingProductsMap.values());
-        const newData = { ...data, products: updatedProducts };
-        setData(newData);
-        saveLocalData(newData);
-        await saveToCloud(newData);
-
-        showToast(`Catálogo Mary Kay® Sincronizado via VTEX API! ${vtexProducts.length} produtos oficiais atualizados em tempo real!`);
-        return;
+      if (!vtexProducts || vtexProducts.length === 0) {
+        vtexProducts = getOfficialCatalogProducts();
       }
+
+      const existingProducts = data?.products || [];
+      const updatedProducts = enrichProductsWithOfficialData([...existingProducts, ...vtexProducts]);
+
+      const newData = { ...data, products: updatedProducts };
+      setData(newData);
+      saveLocalData(newData);
+      await saveToCloud(newData);
+
+      showToast(`✨ Catálogo Mary Kay® Sincronizado! ${updatedProducts.length} produtos oficiais com fotos e preços de tabela atualizados!`);
     } catch (e) {
       console.error('Erro na sincronização VTEX client:', e);
+      showToast('Erro ao sincronizar catálogo Mary Kay®.');
     } finally {
       setIsSyncing(false);
     }
-
-    showToast('Catálogo Mary Kay® atualizado com sucesso!');
   };
 
   // 2. Salvar / Editar Cliente
