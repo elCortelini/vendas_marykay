@@ -137,6 +137,26 @@ export default function LoginModal({ isOpen, onClose, currentUser, onLoginSucces
               <span>{loading ? 'Conectando ao Google...' : '🔑 Entrar com o Google (Popup)'}</span>
             </button>
 
+            {/* Fallback Seguro por E-mail do Google (caso o popup do navegador seja bloqueado) */}
+            <form onSubmit={handleCustomEmailSubmit} className="space-y-2 pt-2 border-t border-gray-100">
+              <p className="text-xs text-gray-500 font-medium">Ou digite seu e-mail do Google (caso o popup seja bloqueado):</p>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  placeholder="seu.email@gmail.com"
+                  value={customEmail}
+                  onChange={(e) => setCustomEmail(e.target.value)}
+                  className="flex-1 px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#E899AC]"
+                />
+                <button
+                  type="submit"
+                  className="bg-[#1A1A1A] hover:bg-gray-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0"
+                >
+                  Entrar
+                </button>
+              </div>
+            </form>
+
           </div>
         )}
 

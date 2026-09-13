@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
+    "postbuild": "node -e \"fs.copyFileSync('dist/index.html', 'dist/404.html')\"",
     "preview": "vite preview",
     "server": "node server/index.js",
     "start": "node server/index.js"
