@@ -29,6 +29,81 @@ import { saveToCloud, fetchFromCloud } from './services/cloudSync';
 const defaultDb = defaultDbRaw?.default || defaultDbRaw || {};
 const officialCatalogMap = officialCatalogMapRaw?.default || officialCatalogMapRaw || {};
 
+const DEFAULT_KITS = [
+  {
+    id: 'kit-timewise-3d',
+    name: 'Kit Sistema TimeWise® 3D 4 em 1',
+    category: 'Cuidados com a Pele (TimeWise 3D)',
+    originalPrice: 389.60,
+    bundlePrice: 349.90,
+    savings: 39.70,
+    image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80',
+    description: 'Tratamento facial completo de 4 passos: Gel de Limpeza 4 em 1 + Hidratante Antioxidante + Solução Diurna FPS 30 + Solução Noturna.',
+    items: [
+      { sku: '101903', name: 'Gel de Limpeza 4 em 1 TimeWise® 3D', price: 79.90 },
+      { sku: '101905', name: 'Hidratante Antioxidante TimeWise® 3D', price: 99.90 },
+      { sku: '101912', name: 'Solução Diurna FPS 30 TimeWise® 3D', price: 104.90 },
+      { sku: '101913', name: 'Solução Noturna TimeWise® 3D', price: 104.90 }
+    ]
+  },
+  {
+    id: 'kit-labios-de-seda',
+    name: 'Kit Lábios de Seda Satin Lips®',
+    category: 'Corpo & Lábios de Seda',
+    originalPrice: 114.80,
+    bundlePrice: 99.90,
+    savings: 14.90,
+    image: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?auto=format&fit=crop&w=600&q=80',
+    description: 'Renovação labial em 2 passos simples: Esfoliante com Cristais de Açúcar + Bálsamo com Manteiga de Karité.',
+    items: [
+      { sku: '10123401', name: 'Esfoliante para os Lábios Satin Lips®', price: 57.40 },
+      { sku: '10123402', name: 'Bálsamo para os Lábios Satin Lips®', price: 57.40 }
+    ]
+  },
+  {
+    id: 'kit-maos-de-seda',
+    name: 'Kit Mãos de Seda Satin Hands® Karité',
+    category: 'Corpo & Lábios de Seda',
+    originalPrice: 199.90,
+    bundlePrice: 169.90,
+    savings: 30.00,
+    image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80',
+    description: 'Tratamento SPA de mãos em 3 passos com Manteiga de Karité: Cera Protetora + Esfoliante em Gel + Creme para Mãos.',
+    items: [
+      { sku: '10123403', name: 'Cera Protetora para Mãos Satin Hands®', price: 59.90 },
+      { sku: '10123404', name: 'Esfoliante em Gel para Mãos Karité', price: 69.90 },
+      { sku: '10123405', name: 'Creme para Mãos Karité Satin Hands®', price: 69.90 }
+    ]
+  }
+];
+
+const DEFAULT_REWARDS = [
+  {
+    id: 'reward-batom-gel',
+    name: 'Batom Gel Semi-Matte Mary Kay® (Cor à Escolha)',
+    sku: '10142659',
+    pointsRequired: 80,
+    description: 'Batom de alta pigmentação com acabamento fosco confortável e textura leve.',
+    image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'reward-labios-seda',
+    name: 'Kit Lábios de Seda Satin Lips® Karité',
+    sku: '10123401',
+    pointsRequired: 120,
+    description: 'Esfoliante e Bálsamo labial com manteiga de Karité para lábios macios e hidratados.',
+    image: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?auto=format&fit=crop&w=600&q=80'
+  },
+  {
+    id: 'reward-gel-limpeza-3d',
+    name: 'Gel de Limpeza 4 em 1 TimeWise® 3D 127g',
+    sku: '101903',
+    pointsRequired: 150,
+    description: 'Limpa, esfolia, tonifica e devolve o brilho natural da pele em um único passo.',
+    image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80'
+  }
+];
+
 const safeArray = (arr, fallback = []) => {
   if (Array.isArray(arr) && arr.length > 0) return arr;
   if (Array.isArray(fallback) && fallback.length > 0) return fallback;
@@ -54,7 +129,8 @@ const normalizeDb = (raw) => {
     clients: safeArray(source.clients, defaultDb.clients),
     carts: safeArray(source.carts, defaultDb.carts),
     payments: safeArray(source.payments, defaultDb.payments),
-    rewards: safeArray(source.rewards, defaultDb.rewards)
+    rewards: safeArray(source.rewards, DEFAULT_REWARDS),
+    kits: safeArray(source.kits, DEFAULT_KITS)
   };
 };
 
@@ -696,47 +772,133 @@ export default function App() {
   // 12. Cadastrar Brinde de Fidelidade
   const handleAddReward = async (rewardData) => {
     try {
-      const res = await safeFetch('/api/rewards', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(rewardData)
-      });
-      if (res.ok) {
-        showToast('Novo brinde cadastrado!');
-        await fetchData();
-      }
+      const newReward = {
+        id: rewardData.id || ('reward-' + Date.now()),
+        name: rewardData.name,
+        sku: rewardData.sku || '',
+        pointsRequired: Number(rewardData.pointsRequired || 100),
+        description: rewardData.description || '',
+        image: rewardData.image || 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80'
+      };
+
+      const currentRewards = data?.rewards || DEFAULT_REWARDS;
+      const updatedRewards = [newReward, ...currentRewards];
+      const newData = { ...data, rewards: updatedRewards };
+      setData(newData);
+      saveLocalData(newData);
+      await saveToCloud(newData);
+
+      showToast(`Novo brinde "${newReward.name}" cadastrado!`);
+
+      try {
+        await safeFetch('/api/rewards', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(rewardData)
+        });
+      } catch (e) {}
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao cadastrar brinde:', err);
     }
   };
 
   // 13. Remover Brinde
   const handleDeleteReward = async (rewardId) => {
     try {
-      const res = await safeFetch(`/api/rewards/${rewardId}`, { method: 'DELETE' });
-      if (res.ok) {
-        showToast('Brinde removido.');
-        await fetchData();
-      }
+      const currentRewards = data?.rewards || DEFAULT_REWARDS;
+      const updatedRewards = currentRewards.filter(r => r.id !== rewardId);
+      const newData = { ...data, rewards: updatedRewards };
+      setData(newData);
+      saveLocalData(newData);
+      await saveToCloud(newData);
+
+      showToast('Brinde removido do programa de fidelidade.');
+
+      try {
+        await safeFetch(`/api/rewards/${rewardId}`, { method: 'DELETE' });
+      } catch (e) {}
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao remover brinde:', err);
     }
   };
 
   // 14. Atualizar Estoque Físico Pronta-Entrega
   const handleUpdateInventory = async (productId, stockCount, stockEntryDate) => {
     try {
-      const res = await safeFetch('/api/inventory/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, stockCount, stockEntryDate })
+      const currentProducts = data?.products || [];
+      const cleanTarget = String(productId || '').trim().toUpperCase();
+
+      const updatedProducts = currentProducts.map(p => {
+        const matchesId = p.id === productId;
+        const matchesSku = p.sku && String(p.sku).trim().toUpperCase() === cleanTarget;
+        if (matchesId || matchesSku) {
+          return {
+            ...p,
+            stockCount: Math.max(0, Number(stockCount || 0)),
+            stockEntryDate: stockEntryDate || new Date().toISOString().split('T')[0]
+          };
+        }
+        return p;
       });
-      if (res.ok) {
-        showToast('Estoque físico (Pronta-Entrega) atualizado!');
-        await fetchData();
-      }
+
+      const newData = { ...data, products: updatedProducts };
+      setData(newData);
+      saveLocalData(newData);
+      await saveToCloud(newData);
+
+      showToast('Estoque físico (Pronta-Entrega) atualizado com sucesso!');
+
+      try {
+        await safeFetch('/api/inventory/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId, stockCount, stockEntryDate })
+        });
+      } catch (e) {}
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao atualizar estoque físico:', err);
+    }
+  };
+
+  // 14b. Salvar / Editar Kit Promocional
+  const handleSaveKit = async (kitData) => {
+    try {
+      const currentKits = data?.kits || DEFAULT_KITS;
+      let updatedKits = [];
+      const kitIndex = currentKits.findIndex(k => k.id === kitData.id);
+      
+      if (kitIndex !== -1) {
+        updatedKits = [...currentKits];
+        updatedKits[kitIndex] = { ...updatedKits[kitIndex], ...kitData };
+      } else {
+        const newKit = { ...kitData, id: kitData.id || ('kit-' + Date.now()) };
+        updatedKits = [newKit, ...currentKits];
+      }
+
+      const newData = { ...data, kits: updatedKits };
+      setData(newData);
+      saveLocalData(newData);
+      await saveToCloud(newData);
+
+      showToast(`Kit "${kitData.name}" salvo com sucesso!`);
+    } catch (err) {
+      console.error('Erro ao salvar kit:', err);
+    }
+  };
+
+  // 14c. Excluir Kit Promocional
+  const handleDeleteKit = async (kitId) => {
+    try {
+      const currentKits = data?.kits || DEFAULT_KITS;
+      const updatedKits = currentKits.filter(k => k.id !== kitId);
+      const newData = { ...data, kits: updatedKits };
+      setData(newData);
+      saveLocalData(newData);
+      await saveToCloud(newData);
+
+      showToast('Kit promocional excluído com sucesso!');
+    } catch (err) {
+      console.error('Erro ao excluir kit:', err);
     }
   };
 
@@ -1096,8 +1258,11 @@ export default function App() {
 
             {activeTab === 'kits' && (
               <KitsManagerView
+                kits={data?.kits || DEFAULT_KITS}
                 products={data?.products || []}
                 onAddKitToCart={handleAddKitToCart}
+                onSaveKit={handleSaveKit}
+                onDeleteKit={handleDeleteKit}
               />
             )}
 

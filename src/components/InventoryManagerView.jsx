@@ -13,7 +13,7 @@ export default function InventoryManagerView({
   const [searchTerm, setSearchTerm] = useState('');
   const [skuAddInput, setSkuAddInput] = useState('');
   const [stockAddCount, setStockAddCount] = useState('1');
-  const [selectedFilter, setSelectedFilter] = useState('inStock'); // 'all', 'inStock', 'outOfStock'
+  const [selectedFilter, setSelectedFilter] = useState('all'); // 'all', 'inStock', 'outOfStock'
   const [noticeMessage, setNoticeMessage] = useState(null);
   const [isSearchingSku, setIsSearchingSku] = useState(false);
 

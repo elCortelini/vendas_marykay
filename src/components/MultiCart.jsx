@@ -120,66 +120,136 @@ export default function MultiCart({
 
   return (
     <div className="space-y-6">
-      {/* Barra de Abas de Carrinhos Multi-Cliente & Ordenação */}
-      <div className="bg-white p-4 rounded-2xl border border-[#E899AC]/30 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3 overflow-x-auto w-full md:w-auto no-scrollbar py-1">
-          {/* Seletor de Ordenação de Carrinhos */}
-          <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-xl shrink-0">
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Ordenar:</span>
-            <select
-              value={cartSortBy}
-              onChange={(e) => setCartSortBy(e.target.value)}
-              className="bg-transparent text-xs font-bold text-[#B76E79] focus:outline-none cursor-pointer"
-            >
-              <option value="date">📅 Por Data</option>
-              <option value="value">💰 Por Valor Total</option>
-              <option value="client">👤 Por Nome do Cliente</option>
-            </select>
+      {/* Lista Geral e Resumo dos Carrinhos em Aberto */}
+      <div className="bg-white p-5 rounded-3xl border border-[#E899AC]/30 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b pb-3">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="w-5 h-5 text-[#B76E79]" />
+            <div>
+              <h3 className="font-serif-mk text-base font-bold text-gray-900 flex items-center gap-2">
+                <span>Lista de Carrinhos em Aberto</span>
+                <span className="bg-[#1A1A1A] text-[#E899AC] text-[10px] font-extrabold px-2.5 py-0.5 rounded-full">
+                  {sortedCarts.length} Carrinhos
+                </span>
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Alterne entre os carrinhos ativos, confira o valor total de cada cliente e gere orçamentos de luxo.
+              </p>
+            </div>
           </div>
 
-          {sortedCarts.map(cart => (
-            <button
-              key={cart.id}
-              onClick={() => setActiveCartId(cart.id)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2.5 whitespace-nowrap cursor-pointer ${
-                cart.id === activeCartId
-                  ? 'bg-[#1A1A1A] text-white shadow-md'
-                  : 'bg-gray-50 text-gray-700 hover:bg-[#F8E8E8] hover:text-[#B76E79] border border-gray-200'
-              }`}
-            >
-              <ShoppingBag className="w-3.5 h-3.5 text-[#E899AC]" />
-              <div className="text-left">
-                <span className="block leading-tight font-bold">{cart.clientName}</span>
-                {cart.title && <span className="text-[10px] text-gray-400 block font-normal">{cart.title}</span>}
-              </div>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                cart.id === activeCartId ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
-              }`}>
-                {cart.items.reduce((acc, i) => acc + i.quantity, 0)} itens
-              </span>
-            </button>
-          ))}
+          <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+            {/* Seletor de Ordenação de Carrinhos */}
+            <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-3 py-2 rounded-xl text-xs">
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Ordenar:</span>
+              <select
+                value={cartSortBy}
+                onChange={(e) => setCartSortBy(e.target.value)}
+                className="bg-transparent font-bold text-[#B76E79] focus:outline-none cursor-pointer"
+              >
+                <option value="date">📅 Por Data</option>
+                <option value="value">💰 Por Valor Total</option>
+                <option value="client">👤 Por Nome do Cliente</option>
+              </select>
+            </div>
 
-          <button
-            onClick={() => {
-              setSelectedClientIdForCart(clients[0]?.id || '');
-              setIsNewCartModalOpen(true);
-            }}
-            className="bg-[#F8E8E8] hover:bg-[#E899AC] text-[#B76E79] hover:text-white px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Novo Carrinho</span>
-          </button>
+            <button
+              onClick={() => {
+                setSelectedClientIdForCart(clients[0]?.id || '');
+                setIsNewCartModalOpen(true);
+              }}
+              className="bg-[#F8E8E8] hover:bg-[#E899AC] text-[#B76E79] hover:text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Novo Carrinho</span>
+            </button>
+
+            {/* Botão Especial: Consolidador de Pedidos */}
+            <button
+              onClick={onOpenConsolidator}
+              className="mk-gold-gradient text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-md hover:opacity-95 transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <Layers className="w-4 h-4" />
+              <span>Consolidar Pedidos</span>
+            </button>
+          </div>
         </div>
 
-        {/* Botão Especial: Consolidador de Pedidos */}
-        <button
-          onClick={onOpenConsolidator}
-          className="mk-gold-gradient text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-md hover:opacity-95 transition-all flex items-center gap-2 cursor-pointer w-full md:w-auto justify-center"
-        >
-          <Layers className="w-4 h-4" />
-          <span>Consolidar e Comprar no Site Oficial</span>
-        </button>
+        {/* Grid Visual com a Lista de Todos os Carrinhos e seus Valores */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          {sortedCarts.map(cart => {
+            const cartTotal = getCartTotal(cart);
+            const cartItemsCount = cart.items.reduce((acc, i) => acc + i.quantity, 0);
+            const isActive = cart.id === activeCartId;
+
+            return (
+              <div
+                key={cart.id}
+                onClick={() => setActiveCartId(cart.id)}
+                className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-2 ${
+                  isActive
+                    ? 'bg-[#1A1A1A] text-white border-black shadow-lg ring-2 ring-[#E899AC]'
+                    : 'bg-[#FAF7F5] hover:bg-white text-gray-800 border-gray-200 hover:border-[#E899AC]/50 shadow-sm'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="font-bold text-xs block truncate leading-tight">{cart.clientName}</span>
+                    {cart.title && (
+                      <span className={`text-[10px] block truncate mt-0.5 ${isActive ? 'text-gray-300' : 'text-gray-500'}`}>
+                        {cart.title}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0 ${
+                    isActive ? 'bg-[#E899AC] text-white' : 'bg-[#F8E8E8] text-[#B76E79]'
+                  }`}>
+                    {cartItemsCount} {cartItemsCount === 1 ? 'item' : 'itens'}
+                  </span>
+                </div>
+
+                <div className="pt-2 border-t border-current/10 flex items-center justify-between gap-2">
+                  <div>
+                    <span className={`text-[9px] uppercase font-bold tracking-wider block ${isActive ? 'text-gray-400' : 'text-gray-400'}`}>
+                      Valor Total:
+                    </span>
+                    <span className={`text-base font-black font-serif-mk ${isActive ? 'text-[#E899AC]' : 'text-[#B76E79]'}`}>
+                      R$ {numFmt(cartTotal)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenQuoteModal(cart);
+                      }}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        isActive ? 'hover:bg-white/20 text-white' : 'hover:bg-gray-100 text-gray-600'
+                      }`}
+                      title="Imprimir / Ver Orçamento"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteCart(cart.id);
+                      }}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        isActive ? 'hover:bg-red-500/30 text-red-300' : 'hover:bg-red-50 text-red-500'
+                      }`}
+                      title="Excluir Carrinho"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Modal para Escolher Cliente ao Criar Novo Carrinho */}

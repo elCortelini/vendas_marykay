@@ -94,8 +94,8 @@ const PRESET_KITS = [
   }
 ];
 
-export default function KitsManagerView({ products = [], onAddKitToCart }) {
-  const [kits, setKits] = useState(PRESET_KITS);
+export default function KitsManagerView({ kits: kitsProp = [], products = [], onAddKitToCart, onSaveKit, onDeleteKit }) {
+  const kits = (kitsProp && kitsProp.length > 0) ? kitsProp : PRESET_KITS;
   const [isCreatingCustomKit, setIsCreatingCustomKit] = useState(false);
   const [editingKitId, setEditingKitId] = useState(null);
   const [productSearch, setProductSearch] = useState('');
@@ -161,7 +161,9 @@ export default function KitsManagerView({ products = [], onAddKitToCart }) {
 
   const handleDeleteKit = (kitId) => {
     if (window.confirm('Deseja realmente excluir este kit promocional?')) {
-      setKits(kits.filter(k => k.id !== kitId));
+      if (onDeleteKit) {
+        onDeleteKit(kitId);
+      }
     }
   };
 
@@ -171,8 +173,8 @@ export default function KitsManagerView({ products = [], onAddKitToCart }) {
 
     const bundleVal = parseFloat(customKitForm.bundlePrice) || (totalOriginalPrice > 0 ? totalOriginalPrice * 0.85 : 99.90);
 
-    const newKit = {
-      id: 'custom-kit-' + Date.now(),
+    const kitPayload = {
+      id: editingKitId || ('custom-kit-' + Date.now()),
       name: customKitForm.name,
       category: 'Kits & Combos Especiais',
       bundlePrice: bundleVal,
@@ -185,10 +187,14 @@ export default function KitsManagerView({ products = [], onAddKitToCart }) {
         : [{ sku: 'KIT-CUSTOM', name: customKitForm.name, price: bundleVal }]
     };
 
-    setKits([newKit, ...kits]);
+    if (onSaveKit) {
+      onSaveKit(kitPayload);
+    }
+
     setCustomKitForm({ name: '', bundlePrice: '', description: '', image: '' });
     setSelectedKitProducts([]);
     setIsCreatingCustomKit(false);
+    setEditingKitId(null);
   };
 
   return (
