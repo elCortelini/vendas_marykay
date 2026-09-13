@@ -20,8 +20,28 @@ export default function MultiCart({
   const [cartTitleInput, setCartTitleInput] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
+  const [cartSortBy, setCartSortBy] = useState('date'); // 'date', 'value', 'client'
 
-  const currentCart = carts.find(c => c.id === activeCartId) || carts[0];
+  const getCartTotal = (cart) => {
+    const sub = (cart?.items || []).reduce((sum, item) => sum + (Number(item?.price || 0) * Number(item?.quantity || 1)), 0);
+    const disc = (sub * Number(cart?.discountPercent || 0)) / 100;
+    return Math.max(0, sub - disc + Number(cart?.shippingFee || 0));
+  };
+
+  const sortedCarts = [...(carts || [])].sort((a, b) => {
+    if (cartSortBy === 'value') {
+      return getCartTotal(b) - getCartTotal(a);
+    }
+    if (cartSortBy === 'client') {
+      return (a.clientName || '').localeCompare(b.clientName || '');
+    }
+    // Default 'date' - newest first
+    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return dateB - dateA;
+  });
+
+  const currentCart = carts.find(c => c.id === activeCartId) || sortedCarts[0] || carts[0];
 
   const handleQuantityChange = (productId, delta) => {
     if (!currentCart) return;
@@ -100,10 +120,24 @@ export default function MultiCart({
 
   return (
     <div className="space-y-6">
-      {/* Barra de Abas de Carrinhos Multi-Cliente */}
+      {/* Barra de Abas de Carrinhos Multi-Cliente & Ordenação */}
       <div className="bg-white p-4 rounded-2xl border border-[#E899AC]/30 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto no-scrollbar py-1">
-          {carts.map(cart => (
+        <div className="flex items-center gap-3 overflow-x-auto w-full md:w-auto no-scrollbar py-1">
+          {/* Seletor de Ordenação de Carrinhos */}
+          <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-xl shrink-0">
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Ordenar:</span>
+            <select
+              value={cartSortBy}
+              onChange={(e) => setCartSortBy(e.target.value)}
+              className="bg-transparent text-xs font-bold text-[#B76E79] focus:outline-none cursor-pointer"
+            >
+              <option value="date">📅 Por Data</option>
+              <option value="value">💰 Por Valor Total</option>
+              <option value="client">👤 Por Nome do Cliente</option>
+            </select>
+          </div>
+
+          {sortedCarts.map(cart => (
             <button
               key={cart.id}
               onClick={() => setActiveCartId(cart.id)}

@@ -1,16 +1,48 @@
 import React, { useState } from 'react';
-import { Gift, Star, Plus, Trash2, Check, Award, Users, Search, Minus, Heart, ShieldCheck } from 'lucide-react';
+import { Gift, Star, Plus, Trash2, Check, Award, Users, Search, Minus, Heart, ShieldCheck, Upload, Box } from 'lucide-react';
 
-export default function LoyaltyManagerView({ rewards = [], clients = [], onAddReward, onDeleteReward, onUpdateClientPoints }) {
+export default function LoyaltyManagerView({ rewards = [], clients = [], products = [], onAddReward, onDeleteReward, onUpdateClientPoints }) {
   const [clientSearch, setClientSearch] = useState('');
+  const [skuInput, setSkuInput] = useState('');
   const [newRewardForm, setNewRewardForm] = useState({
     name: '',
     pointsRequired: '',
     description: '',
-    image: ''
+    image: '',
+    sku: ''
   });
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [redemptionNotice, setRedemptionNotice] = useState(null);
+
+  const handleImageFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewRewardForm(prev => ({ ...prev, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSkuLookup = () => {
+    const cleanSku = skuInput.trim();
+    if (!cleanSku) return;
+
+    const found = (products || []).find(p => p.sku === cleanSku || p.id === cleanSku || (p.sku && p.sku.toUpperCase() === cleanSku.toUpperCase()));
+    if (found) {
+      setNewRewardForm(prev => ({
+        ...prev,
+        sku: found.sku || cleanSku,
+        name: found.name,
+        pointsRequired: String(Math.round(found.price || 100)),
+        description: found.description || `Brinde exclusivo Mary Kay® (SKU #${found.sku}).`,
+        image: found.image || prev.image
+      }));
+    } else {
+      alert(`Produto com SKU #${cleanSku} não encontrado no catálogo local. Você pode preencher os dados manualmente.`);
+    }
+  };
 
   const filteredClients = clients.filter(c => 
     c.name.toLowerCase().includes(clientSearch.toLowerCase()) ||
@@ -23,12 +55,14 @@ export default function LoyaltyManagerView({ rewards = [], clients = [], onAddRe
     if (onAddReward) {
       onAddReward({
         name: newRewardForm.name,
+        sku: newRewardForm.sku || '',
         pointsRequired: parseInt(newRewardForm.pointsRequired),
         description: newRewardForm.description,
         image: newRewardForm.image || 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80'
       });
     }
-    setNewRewardForm({ name: '', pointsRequired: '', description: '', image: '' });
+    setNewRewardForm({ name: '', pointsRequired: '', description: '', image: '', sku: '' });
+    setSkuInput('');
     setIsAddFormOpen(false);
   };
 
@@ -90,10 +124,34 @@ export default function LoyaltyManagerView({ rewards = [], clients = [], onAddRe
       {/* Form de Cadastro de Novo Brinde */}
       {isAddFormOpen && (
         <form onSubmit={handleAddSubmit} className="bg-white p-6 rounded-3xl border-2 border-[#E899AC] shadow-xl space-y-4 text-xs animate-fade-in">
-          <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+          <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2 border-b pb-3">
             <Award className="w-5 h-5 text-[#B76E79]" />
             <span>Cadastrar Novo Brinde para o Programa de Fidelidade</span>
           </h3>
+
+          {/* Busca Rápida por Código SKU */}
+          <div className="bg-[#FAF7F5] p-3.5 rounded-2xl border border-[#E899AC]/30 space-y-2">
+            <label className="block font-bold text-gray-800 flex items-center gap-1.5">
+              <Box className="w-4 h-4 text-[#B76E79]" />
+              <span>Incluir Produto por Código SKU (Preenchimento Automático):</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Digite o código SKU do produto (ex: 101903)..."
+                value={skuInput}
+                onChange={(e) => setSkuInput(e.target.value)}
+                className="flex-1 px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-xs"
+              />
+              <button
+                type="button"
+                onClick={handleSkuLookup}
+                className="bg-[#1A1A1A] hover:bg-black text-white font-bold px-4 py-2 rounded-xl text-xs transition-all shrink-0 cursor-pointer"
+              >
+                Buscar Código
+              </button>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -121,14 +179,32 @@ export default function LoyaltyManagerView({ rewards = [], clients = [], onAddRe
             </div>
 
             <div className="sm:col-span-2">
-              <label className="block font-semibold text-gray-700 mb-1">URL da Foto do Brinde</label>
-              <input
-                type="text"
-                placeholder="Ex: https://images.unsplash.com/photo-1586495777744-4413f21062fa"
-                value={newRewardForm.image}
-                onChange={(e) => setNewRewardForm({ ...newRewardForm, image: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E899AC]"
-              />
+              <label className="block font-semibold text-gray-700 mb-1">Foto do Brinde (Upload do Computador ou URL)</label>
+              <div className="flex items-center gap-2">
+                <label className="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm">
+                  <Upload className="w-4 h-4 text-[#B76E79]" />
+                  <span>Subir Foto do PC</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageFileUpload}
+                    className="hidden"
+                  />
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ou cole a URL da imagem aqui..."
+                  value={newRewardForm.image}
+                  onChange={(e) => setNewRewardForm({ ...newRewardForm, image: e.target.value })}
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#E899AC]"
+                />
+              </div>
+              {newRewardForm.image && (
+                <div className="mt-2 flex items-center gap-2 bg-gray-50 p-2 rounded-xl border border-gray-200">
+                  <img src={newRewardForm.image} alt="Preview Brinde" className="w-10 h-10 object-cover rounded-lg border" />
+                  <span className="text-[10px] text-gray-500 font-bold">Foto selecionada para o brinde</span>
+                </div>
+              )}
             </div>
 
             <div className="sm:col-span-2">

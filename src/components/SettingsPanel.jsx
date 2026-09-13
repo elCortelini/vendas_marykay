@@ -37,7 +37,7 @@ export default function SettingsPanel({
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [isEditingConsultant, setIsEditingConsultant] = useState(true);
+  const [isEditingConsultant, setIsEditingConsultant] = useState(false);
   const [consultantNotice, setConsultantNotice] = useState(null);
 
   useEffect(() => {
@@ -175,8 +175,8 @@ export default function SettingsPanel({
               </button>
             </div>
 
-            {/* Seleção de Vendedora Ativa quando houver mais de uma */}
-            {consultants && consultants.length > 1 && (
+            {/* Seleção de Vendedora Ativa */}
+            {consultants && consultants.length >= 1 && (
               <div className="bg-[#FAF7F5] p-4 rounded-2xl border border-[#E899AC]/30 space-y-2 text-xs">
                 <h4 className="font-bold text-gray-900 flex items-center gap-1.5">
                   <User className="w-4 h-4 text-[#B76E79]" />
@@ -204,11 +204,25 @@ export default function SettingsPanel({
                           </div>
                         </div>
 
-                        {isActive && (
-                          <span className="bg-emerald-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">
-                            ATIVA
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1">
+                          {isActive && (
+                            <span className="bg-emerald-600 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full">
+                              ATIVA
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConsultantForm(c);
+                              setIsEditingConsultant(true);
+                            }}
+                            className="p-1 hover:bg-gray-200 text-gray-600 rounded-lg text-[10px] font-bold"
+                            title="Editar esta vendedora"
+                          >
+                            ✏️ Editar
+                          </button>
+                        </div>
                       </div>
                     );
                   })}

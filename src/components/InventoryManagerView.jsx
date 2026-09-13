@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
-import { Package, Search, Plus, Minus, Check, ArrowDownRight, Tag, RefreshCw, Box, AlertCircle, ShoppingBag, DollarSign, Calendar } from 'lucide-react';
+import { Package, Search, Plus, Minus, Check, ArrowDownRight, Tag, RefreshCw, Box, AlertCircle, ShoppingBag, DollarSign, Calendar, Edit2, Trash2 } from 'lucide-react';
 
-export default function InventoryManagerView({ products = [], clients = [], onUpdateInventory, onRecordPayment }) {
+export default function InventoryManagerView({
+  products = [],
+  clients = [],
+  onUpdateInventory,
+  onRecordPayment,
+  onFetchProductBySku,
+  onUpdateProductPricing,
+  onDeleteProduct
+}) {
   const [searchTerm, setSearchTerm] = useState('');
   const [skuAddInput, setSkuAddInput] = useState('');
   const [stockAddCount, setStockAddCount] = useState('1');
   const [selectedFilter, setSelectedFilter] = useState('inStock'); // 'all', 'inStock', 'outOfStock'
   const [noticeMessage, setNoticeMessage] = useState(null);
+  const [isSearchingSku, setIsSearchingSku] = useState(false);
 
   // Estado para Modal de Dar Baixa / Venda no Estoque
   const [baixaModalProduct, setBaixaModalProduct] = useState(null);
@@ -14,6 +23,12 @@ export default function InventoryManagerView({ products = [], clients = [], onUp
   const [baixaReason, setBaixaReason] = useState('Venda'); // 'Venda', 'Uso Pessoal', 'Amostra Grátis', 'Perda/Validade'
   const [baixaSelectedClient, setBaixaSelectedClient] = useState(clients[0]?.id || '');
   const [baixaSalePrice, setBaixaSalePrice] = useState('');
+
+  // Estado para Modal de Edição de Produto no Estoque
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editPrice, setEditPrice] = useState('');
+  const [editCostPrice, setEditCostPrice] = useState('');
+  const [editStockCount, setEditStockCount] = useState('');
 
   // Produtos filtrados
   const filteredProducts = products.filter(p => {
@@ -41,14 +56,29 @@ export default function InventoryManagerView({ products = [], clients = [], onUp
   };
 
   // Entrada no Estoque por Código SKU
-  const handleSkuStockSubmit = (e) => {
+  const handleSkuStockSubmit = async (e) => {
     e.preventDefault();
     const cleanSku = skuAddInput.trim();
     if (!cleanSku) return;
 
-    const prod = products.find(p => p.sku === cleanSku || p.id === cleanSku || p.sku === cleanSku.toUpperCase());
+    const addQty = parseInt(stockAddCount) || 1;
+    let prod = products.find(p => p.sku === cleanSku || p.id === cleanSku || (p.sku && p.sku.toUpperCase() === cleanSku.toUpperCase()));
+
+    if (!prod && onFetchProductBySku) {
+      setIsSearchingSku(true);
+      try {
+        const res = await onFetchProductBySku(cleanSku);
+        if (res && res.product) {
+          prod = res.product;
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSearchingSku(false);
+      }
+    }
+
     if (prod) {
-      const addQty = parseInt(stockAddCount) || 1;
       const newTotal = (prod.stockCount || 0) + addQty;
       if (onUpdateInventory) {
         onUpdateInventory(prod.id, newTotal);
@@ -57,8 +87,41 @@ export default function InventoryManagerView({ products = [], clients = [], onUp
       setSkuAddInput('');
       setStockAddCount('1');
     } else {
-      alert(`Produto com código SKU "${cleanSku}" não foi encontrado no catálogo local. Busque por nome ou sincronize o catálogo.`);
+      alert(`Código SKU "${cleanSku}" não localizado. Verifique se o código está correto ou utilize a pesquisa por nome no catálogo.`);
     }
+  };
+
+  // Salvar Edição do Produto
+  const handleSaveEditProduct = (e) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+
+    const newPrice = parseFloat(editPrice) || editingProduct.price || 0;
+    const newCost = parseFloat(editCostPrice) || (newPrice * 0.6);
+    const newStock = Math.max(0, parseInt(editStockCount) || 0);
+
+    if (onUpdateProductPricing) {
+      onUpdateProductPricing(editingProduct.id, newPrice, newCost);
+    }
+    if (onUpdateInventory) {
+      onUpdateInventory(editingProduct.id, newStock);
+    }
+
+    showToast(`Produto "${editingProduct.name}" atualizado com sucesso!`);
+    setEditingProduct(null);
+  };
+
+  // Deletar Produto do Estoque
+  const handleDeleteProductClick = (product) => {
+    if (!window.confirm(`Tem certeza que deseja remover o produto "${product.name}" do estoque?`)) {
+      return;
+    }
+    if (onDeleteProduct) {
+      onDeleteProduct(product.id);
+    } else if (onUpdateInventory) {
+      onUpdateInventory(product.id, 0);
+    }
+    showToast(`Produto "${product.name}" removido!`);
   };
 
   // Ajuste rápido +/-
@@ -270,12 +333,37 @@ export default function InventoryManagerView({ products = [], clients = [], onUp
                 }`}
               >
                 <div>
-                  <div className="flex items-center gap-3">
-                    <img src={product.image} alt={product.name} className="w-14 h-14 object-cover rounded-xl border border-gray-200 shrink-0" />
-                    <div>
-                      <span className="text-[10px] font-mono text-gray-400 block">Cód: {product.sku || product.id}</span>
-                      <h4 className="font-bold text-xs text-gray-900 line-clamp-2 leading-tight">{product.name}</h4>
-                      <div className="text-xs font-bold text-[#B76E79] mt-0.5">R$ {Number(product.price || 0).toFixed(2)}</div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <img src={product.image} alt={product.name} className="w-14 h-14 object-cover rounded-xl border border-gray-200 shrink-0" />
+                      <div>
+                        <span className="text-[10px] font-mono text-gray-400 block">Cód: {product.sku || product.id}</span>
+                        <h4 className="font-bold text-xs text-gray-900 line-clamp-2 leading-tight">{product.name}</h4>
+                        <div className="text-xs font-bold text-[#B76E79] mt-0.5">R$ {Number(product.price || 0).toFixed(2)}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => {
+                          setEditingProduct(product);
+                          setEditPrice(String(product.price || ''));
+                          setEditCostPrice(String(product.costPrice || (product.price * 0.6).toFixed(2)));
+                          setEditStockCount(String(product.stockCount || 0));
+                        }}
+                        className="p-1.5 hover:bg-gray-100 text-gray-600 rounded-lg transition-colors cursor-pointer"
+                        title="Editar produto / preço / estoque"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteProductClick(product)}
+                        className="p-1.5 hover:bg-rose-100 text-rose-600 rounded-lg transition-colors cursor-pointer"
+                        title="Deletar produto do estoque"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -418,6 +506,87 @@ export default function InventoryManagerView({ products = [], clients = [], onUp
                 className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-5 py-2 rounded-xl shadow cursor-pointer"
               >
                 Confirmar Baixa
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Modal de Edição de Produto no Estoque */}
+      {editingProduct && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={handleSaveEditProduct} className="bg-white w-full max-w-md p-6 rounded-3xl shadow-2xl border border-[#E899AC]/40 space-y-4 text-xs animate-scale-up">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="font-serif-mk text-base font-bold text-gray-900 flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-[#B76E79]" />
+                <span>Editar Produto & Estoque</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingProduct(null)}
+                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-2xl border">
+              <img src={editingProduct.image} alt={editingProduct.name} className="w-12 h-12 object-cover rounded-xl border" />
+              <div>
+                <h4 className="font-bold text-gray-900 line-clamp-1">{editingProduct.name}</h4>
+                <p className="text-[11px] text-gray-500">SKU #{editingProduct.sku}</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-gray-700 mb-1">Preço de Venda da Tabela (R$) *</label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                value={editPrice}
+                onChange={(e) => setEditPrice(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl font-bold text-gray-900"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold text-gray-700 mb-1">Seu Custo de Aquisição (R$) *</label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                value={editCostPrice}
+                onChange={(e) => setEditCostPrice(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl font-bold text-emerald-700"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold text-gray-700 mb-1">Quantidade em Estoque Físico *</label>
+              <input
+                type="number"
+                min="0"
+                required
+                value={editStockCount}
+                onChange={(e) => setEditStockCount(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl font-extrabold text-center text-sm"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t">
+              <button
+                type="button"
+                onClick={() => setEditingProduct(null)}
+                className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-xl cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="mk-gold-gradient text-white font-bold px-5 py-2 rounded-xl shadow cursor-pointer"
+              >
+                Salvar Alterações
               </button>
             </div>
           </form>

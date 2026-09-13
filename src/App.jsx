@@ -1081,6 +1081,16 @@ export default function App() {
                 clients={data?.clients || []}
                 onUpdateInventory={handleUpdateInventory}
                 onRecordPayment={handleRecordPayment}
+                onFetchProductBySku={handleFetchProductBySku}
+                onUpdateProductPricing={handleUpdateProductPricing}
+                onDeleteProduct={async (productId) => {
+                  const updatedProducts = (data?.products || []).filter(p => p.id !== productId);
+                  const newData = { ...data, products: updatedProducts };
+                  setData(newData);
+                  saveLocalData(newData);
+                  await saveToCloud(newData);
+                  showToast('Produto removido do estoque com sucesso!');
+                }}
               />
             )}
 
@@ -1095,6 +1105,7 @@ export default function App() {
               <LoyaltyManagerView
                 rewards={data?.rewards || []}
                 clients={data?.clients || []}
+                products={data?.products || []}
                 onAddReward={handleAddReward}
                 onDeleteReward={handleDeleteReward}
                 onUpdateClientPoints={handleUpdateClientPoints}
@@ -1140,6 +1151,7 @@ export default function App() {
           cart={quoteModalCart}
           consultant={activeConsultant}
           client={data?.clients?.find(c => c.id === quoteModalCart.clientId)}
+          products={data?.products || []}
           onClose={() => setQuoteModalCart(null)}
         />
       )}

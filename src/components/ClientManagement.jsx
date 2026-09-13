@@ -299,7 +299,66 @@ export default function ClientManagement({
               value={currentClient.notes}
               onChange={(e) => setCurrentClient({ ...currentClient, notes: e.target.value })}
               className="w-full px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-[#E899AC] focus:outline-none"
-            ></textarea>
+            />
+          </div>
+          <div className="bg-[#FAF7F5] p-4 rounded-2xl border border-[#E899AC]/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-[#B76E79]" />
+                <span>Fotos do Rosto / Diagnóstico de Pele (Até 5 Fotos):</span>
+              </label>
+              <span className="text-[10px] text-gray-500 font-bold">
+                {(currentClient.photos || []).length} / 5 fotos adicionadas
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {(currentClient.photos || []).map((photo, pIdx) => (
+                <div key={pIdx} className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-[#E899AC] shadow-sm group">
+                  <img src={photo} alt={`Rosto / Pele ${pIdx + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = (currentClient.photos || []).filter((_, i) => i !== pIdx);
+                      setCurrentClient({ ...currentClient, photos: updated });
+                    }}
+                    className="absolute top-1 right-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shadow opacity-90 hover:opacity-100 cursor-pointer"
+                    title="Remover foto"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+
+              {(currentClient.photos || []).length < 5 && (
+                <label className="w-20 h-20 rounded-2xl border-2 border-dashed border-[#E899AC] bg-white hover:bg-[#F8E8E8]/50 flex flex-col items-center justify-center cursor-pointer transition-all gap-1 text-center p-1">
+                  <Plus className="w-5 h-5 text-[#B76E79]" />
+                  <span className="text-[9px] font-bold text-[#B76E79]">Subir Foto</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      const availableSlots = 5 - (currentClient.photos || []).length;
+                      const selected = files.slice(0, availableSlots);
+
+                      selected.forEach(file => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setCurrentClient(prev => ({
+                            ...prev,
+                            photos: [...(prev.photos || []), reader.result].slice(0, 5)
+                          }));
+                        };
+                        reader.readAsDataURL(file);
+                      });
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
@@ -457,6 +516,23 @@ export default function ClientManagement({
                   )}
                 </div>
               </div>
+
+              {/* Fotos do Rosto & Pele */}
+              {selectedClientForHistory.photos && selectedClientForHistory.photos.length > 0 && (
+                <div className="bg-[#FAF7F5] p-4 rounded-2xl border border-[#E899AC]/30 space-y-2">
+                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-[#B76E79]" />
+                    <span>Diagnóstico de Pele / Fotos do Rosto ({selectedClientForHistory.photos.length})</span>
+                  </h4>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {selectedClientForHistory.photos.map((imgUrl, pIdx) => (
+                      <a key={pIdx} href={imgUrl} target="_blank" rel="noreferrer" className="block w-20 h-20 rounded-xl overflow-hidden border-2 border-[#E899AC] shadow-sm hover:scale-105 transition-transform">
+                        <img src={imgUrl} alt={`Foto Rosto ${pIdx + 1}`} className="w-full h-full object-cover" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Histórico de Compras Concluídas */}
               <div className="bg-white p-4 rounded-2xl border border-gray-200 space-y-3 shadow-sm">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Package, Sparkles, Plus, Trash2, ShoppingBag, Check, Tag, Search, DollarSign, X } from 'lucide-react';
+import { Package, Sparkles, Plus, Trash2, ShoppingBag, Check, Tag, Search, DollarSign, X, Edit2, Upload } from 'lucide-react';
 
 const PRESET_KITS = [
   {
@@ -97,6 +97,7 @@ const PRESET_KITS = [
 export default function KitsManagerView({ products = [], onAddKitToCart }) {
   const [kits, setKits] = useState(PRESET_KITS);
   const [isCreatingCustomKit, setIsCreatingCustomKit] = useState(false);
+  const [editingKitId, setEditingKitId] = useState(null);
   const [productSearch, setProductSearch] = useState('');
   const [selectedKitProducts, setSelectedKitProducts] = useState([]);
   const [customKitForm, setCustomKitForm] = useState({
@@ -106,6 +107,17 @@ export default function KitsManagerView({ products = [], onAddKitToCart }) {
     image: ''
   });
   const [addedKitNotice, setAddedKitNotice] = useState(null);
+
+  const handleImageFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCustomKitForm(prev => ({ ...prev, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Filtrar produtos para selecionar no kit
   const filteredProducts = products.filter(p => 
@@ -337,6 +349,35 @@ export default function KitsManagerView({ products = [], onAddKitToCart }) {
                 </div>
 
                 <div>
+                  <label className="block font-semibold text-gray-700 mb-1">Foto do Kit (Upload do Computador ou URL)</label>
+                  <div className="flex items-center gap-2">
+                    <label className="bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm">
+                      <Upload className="w-4 h-4 text-[#B76E79]" />
+                      <span>Subir Foto do PC</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ou cole a URL da imagem aqui..."
+                      value={customKitForm.image}
+                      onChange={(e) => setCustomKitForm({ ...customKitForm, image: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-[#E899AC]"
+                    />
+                  </div>
+                  {customKitForm.image && (
+                    <div className="mt-2 flex items-center gap-2 bg-white p-2 rounded-xl border border-gray-200">
+                      <img src={customKitForm.image} alt="Preview Kit" className="w-10 h-10 object-cover rounded-lg border" />
+                      <span className="text-[10px] text-gray-500 font-bold">Foto selecionada para o kit</span>
+                    </div>
+                  )}
+                </div>
+
+                <div>
                   <label className="block font-semibold text-gray-700 mb-1">Descrição Curta (Opcional)</label>
                   <input
                     type="text"
@@ -350,7 +391,10 @@ export default function KitsManagerView({ products = [], onAddKitToCart }) {
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     type="button"
-                    onClick={() => setIsCreatingCustomKit(false)}
+                    onClick={() => {
+                      setIsCreatingCustomKit(false);
+                      setEditingKitId(null);
+                    }}
                     className="px-4 py-2 text-gray-500 hover:bg-gray-200 rounded-xl cursor-pointer"
                   >
                     Cancelar
@@ -359,7 +403,7 @@ export default function KitsManagerView({ products = [], onAddKitToCart }) {
                     type="submit"
                     className="mk-gold-gradient text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-md cursor-pointer"
                   >
-                    Salvar Kit Promocional
+                    {editingKitId ? 'Salvar Alterações no Kit' : 'Salvar Kit Promocional'}
                   </button>
                 </div>
               </form>
@@ -428,7 +472,24 @@ export default function KitsManagerView({ products = [], onAddKitToCart }) {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => {
+                      setEditingKitId(kit.id);
+                      setCustomKitForm({
+                        name: kit.name,
+                        bundlePrice: String(kit.bundlePrice),
+                        description: kit.description || '',
+                        image: kit.image || ''
+                      });
+                      setIsCreatingCustomKit(true);
+                    }}
+                    className="p-2 text-gray-400 hover:text-[#B76E79] hover:bg-[#F8E8E8] rounded-xl transition-colors cursor-pointer"
+                    title="Editar este kit"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+
                   <button
                     onClick={() => handleDeleteKit(kit.id)}
                     className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"

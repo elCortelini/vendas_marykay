@@ -39,7 +39,7 @@ export default function Header({
             title={isAdmin ? "Clique para acessar a Área do Administrador Master" : currentUser ? "Clique para Editar Perfil da Consultora" : "Faça Login"}
           >
             <div className="relative">
-              <div className={`w-14 h-14 rounded-full p-0.5 ${isAdmin ? 'bg-amber-500' : currentUser ? 'mk-gold-gradient' : 'bg-gray-300'} shadow-md transition-transform group-hover:scale-105`}>
+              <div className={`w-20 h-20 rounded-full p-1 ${isAdmin ? 'bg-amber-500' : currentUser ? 'mk-gold-gradient' : 'bg-gray-300'} shadow-lg transition-transform group-hover:scale-105 shrink-0`}>
                 <img 
                   src={
                     isAdmin 
@@ -57,34 +57,25 @@ export default function Header({
 
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold font-serif-mk text-gray-900 tracking-tight group-hover:text-[#B76E79] transition-colors">
+                <h1 className="text-2xl font-black font-serif-mk text-gray-900 tracking-tight group-hover:text-[#B76E79] transition-colors">
                   {isAdmin 
-                    ? "Administrador Master" 
+                    ? (currentUser?.displayName || "elCortelini (Administrador Master)") 
                     : currentUser 
-                      ? (consultant?.name || currentUser?.displayName || "Consultora Mary Kay®") 
+                      ? (consultant?.name || currentUser?.displayName || "Tailise Roza") 
                       : "Gestor de Vendas Mary Kay®"}
                 </h1>
                 {isAdmin ? (
                   <span className="bg-amber-500 text-gray-950 text-xs font-black px-2.5 py-0.5 rounded-full shadow-sm border border-amber-600 flex items-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-gray-950" />
-                    elcortelini@gmail.com
+                    Admin
                   </span>
                 ) : currentUser ? (
-                  consultant?.status === 'pending' ? (
+                  consultant?.status === 'pending' && (
                     <span className="bg-amber-500 text-gray-950 text-xs font-black px-2.5 py-0.5 rounded-full border border-amber-600 flex items-center gap-1 animate-pulse">
                       ⏳ Aguardando Liberação
                     </span>
-                  ) : (
-                    <span className="bg-[#F8E8E8] text-[#B76E79] text-xs font-semibold px-2.5 py-0.5 rounded-full border border-[#E899AC]/40 flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#B76E79]" />
-                      Código {consultant?.code || "NW7527"}
-                    </span>
                   )
-                ) : (
-                  <span className="bg-gray-100 text-gray-600 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-gray-200 flex items-center gap-1">
-                    🔒 Não Logado
-                  </span>
-                )}
+                ) : null}
               </div>
               <p className="text-xs text-gray-600 font-medium flex items-center gap-2 mt-0.5">
                 <span>
@@ -109,29 +100,28 @@ export default function Header({
           {/* Módulo de Autenticação: Área de Login & Logout */}
           <div className="flex items-center gap-2 flex-wrap md:flex-nowrap justify-end w-full md:w-auto">
             {currentUser ? (
-              <div className="flex items-center gap-3 bg-white border border-gray-200 p-2 rounded-2xl shadow-sm">
+              <div className="flex items-center gap-3 bg-white border border-gray-200 p-2 px-3 rounded-2xl shadow-sm">
                 <div className="flex items-center gap-2">
                   {currentUser.photoURL ? (
-                    <img src={currentUser.photoURL} alt={currentUser.displayName} className="w-8 h-8 rounded-full border-2 border-[#E899AC]" />
+                    <img src={currentUser.photoURL} alt={currentUser.displayName} className="w-9 h-9 rounded-full border-2 border-[#E899AC]" />
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-[#B76E79] text-white font-black flex items-center justify-center text-xs shadow-sm">
-                      {currentUser.email?.[0].toUpperCase()}
+                    <div className="w-9 h-9 rounded-full bg-[#B76E79] text-white font-black flex items-center justify-center text-xs shadow-sm">
+                      {(currentUser.displayName || currentUser.email || 'M')[0].toUpperCase()}
                     </div>
                   )}
                   <div className="text-left hidden sm:block">
                     <div className="flex items-center gap-1">
-                      <span className="font-bold text-gray-900 text-xs line-clamp-1">{currentUser.displayName || currentUser.email}</span>
+                      <span className="font-bold text-gray-900 text-xs line-clamp-1">{currentUser.displayName || consultant?.name || "Consultora"}</span>
                       <span className={`text-[9px] font-extrabold px-1.5 py-0.2 rounded-full ${isAdmin ? 'bg-amber-500 text-gray-950' : 'bg-emerald-100 text-emerald-800'}`}>
                         {isAdmin ? 'Admin' : 'Conectado'}
                       </span>
                     </div>
-                    <p className="text-[10px] text-gray-500 line-clamp-1">{currentUser.email}</p>
                   </div>
                 </div>
 
                 <button
                   onClick={onLogout}
-                  className="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3 py-1.5 rounded-xl border border-red-200 transition-all flex items-center gap-1 cursor-pointer"
+                  className="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3.5 py-2 rounded-xl border border-red-200 transition-all flex items-center gap-1.5 cursor-pointer hover:shadow-sm"
                   title="Sair da Conta (Logout)"
                 >
                   <LogOut className="w-3.5 h-3.5" />

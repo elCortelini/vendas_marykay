@@ -3,7 +3,7 @@ import { X, Share2, Download, Image, Sparkles, MapPin, Phone, CreditCard, Heart,
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
-export default function ClientQuoteModal({ cart, consultant, client, onClose }) {
+export default function ClientQuoteModal({ cart, consultant, client, products = [], onClose }) {
   const quoteRef = useRef(null);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isExportingJPG, setIsExportingJPG] = useState(false);
@@ -322,32 +322,50 @@ export default function ClientQuoteModal({ cart, consultant, client, onClose }) 
               </h4>
 
               <div className="border border-gray-100 rounded-2xl overflow-hidden divide-y divide-gray-100">
-                {cart.items.map((item, idx) => (
-                  <div key={idx} className="p-3.5 bg-white flex items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={item.image || "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80"}
-                        alt={item.name}
-                        className="w-12 h-12 object-cover rounded-xl border border-gray-100 shrink-0"
-                      />
-                      <div>
-                        <h5 className="font-bold text-gray-900 text-xs">{item.name}</h5>
-                        <p className="text-[10px] text-gray-400 mt-0.5">
-                          SKU #{item.sku} • R$ {numFmt(item.price)} cada
-                        </p>
+                {cart.items.map((item, idx) => {
+                  const matchedProd = (products || []).find(p => p.id === item.id || (p.sku && item.sku && String(p.sku).trim().toLowerCase() === String(item.sku).trim().toLowerCase()));
+                  const stockQty = matchedProd?.stockCount ?? item.stockCount ?? null;
+                  const isInStock = stockQty !== null ? stockQty > 0 : true;
+
+                  return (
+                    <div key={idx} className="p-3.5 bg-white flex items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={item.image || "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80"}
+                          alt={item.name}
+                          className="w-12 h-12 object-cover rounded-xl border border-gray-100 shrink-0"
+                        />
+                        <div>
+                          <h5 className="font-bold text-gray-900 text-xs">{item.name}</h5>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            <span className="text-[10px] text-gray-400">
+                              SKU #{item.sku} • R$ {numFmt(item.price)} cada
+                            </span>
+                            {isInStock ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                {stockQty !== null ? `Em Estoque (${stockQty} un)` : 'Pronta-Entrega'}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                                Sob Encomenda
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className="text-[11px] font-bold text-gray-700 block">
+                          {item.quantity}x R$ {numFmt(item.price)}
+                        </span>
+                        <span className="text-xs font-extrabold text-[#B76E79] block mt-0.5">
+                          R$ {numFmt(Number(item.price || 0) * Number(item.quantity || 1))}
+                        </span>
                       </div>
                     </div>
-
-                    <div className="text-right shrink-0">
-                      <span className="text-[11px] font-bold text-gray-700 block">
-                        {item.quantity}x R$ {numFmt(item.price)}
-                      </span>
-                      <span className="text-xs font-extrabold text-[#B76E79] block mt-0.5">
-                        R$ {numFmt(Number(item.price || 0) * Number(item.quantity || 1))}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
