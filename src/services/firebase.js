@@ -10,14 +10,15 @@ import {
   getFirestore 
 } from 'firebase/firestore';
 
-// Configuração do Firebase com suporte a variáveis de ambiente (.env)
+// Configuração Oficial do Firebase do Projeto vendas-marykay
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyB_MaryKaySystemProductionKey001",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyA9voEkglaziMHQYpZHOcowsSH7Pc3SjBM",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "vendas-marykay.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "vendas-marykay",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "vendas-marykay.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "88271639102",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:88271639102:web:9b08f4c9a721"
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "vendas-marykay.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "703946267553",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:703946267553:web:ebee0e77a5abfb88a2c9e0",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-MQL30PQX8F"
 };
 
 // Email do Administrador Supremo do Sistema
