@@ -105,9 +105,9 @@ const DEFAULT_REWARDS = [
 ];
 
 const safeArray = (arr, fallback = []) => {
-  if (Array.isArray(arr) && arr.length > 0) return arr;
-  if (Array.isArray(fallback) && fallback.length > 0) return fallback;
-  return Array.isArray(arr) ? arr : (Array.isArray(fallback) ? fallback : []);
+  if (Array.isArray(arr)) return arr;
+  if (Array.isArray(fallback)) return fallback;
+  return [];
 };
 
 const safeFetch = async (url, options) => {

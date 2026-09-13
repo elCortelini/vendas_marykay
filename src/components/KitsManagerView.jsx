@@ -94,8 +94,8 @@ const PRESET_KITS = [
   }
 ];
 
-export default function KitsManagerView({ kits: kitsProp = [], products = [], onAddKitToCart, onSaveKit, onDeleteKit }) {
-  const kits = (kitsProp && kitsProp.length > 0) ? kitsProp : PRESET_KITS;
+export default function KitsManagerView({ kits: kitsProp, products = [], onAddKitToCart, onSaveKit, onDeleteKit }) {
+  const kits = Array.isArray(kitsProp) ? kitsProp : PRESET_KITS;
   const [isCreatingCustomKit, setIsCreatingCustomKit] = useState(false);
   const [editingKitId, setEditingKitId] = useState(null);
   const [productSearch, setProductSearch] = useState('');
@@ -420,6 +420,18 @@ export default function KitsManagerView({ kits: kitsProp = [], products = [], on
 
       {/* Grid dos Kits Disponíveis */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {kits.length === 0 && (
+          <div className="col-span-full text-center py-12 px-4 bg-[#FAF7F5] border border-dashed border-[#E899AC]/50 rounded-3xl space-y-3">
+            <Package className="w-10 h-10 text-[#B76E79] mx-auto opacity-60" />
+            <h4 className="font-serif-mk text-base font-bold text-gray-800">
+              Nenhum kit promocional cadastrado no momento
+            </h4>
+            <p className="text-xs text-gray-500 max-w-md mx-auto">
+              Clique no botão "+ Criar Novo Kit Personalizado" acima para cadastrar novos combos promocionais!
+            </p>
+          </div>
+        )}
+
         {kits.map(kit => {
           const isAdded = addedKitNotice === kit.id;
           return (
