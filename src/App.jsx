@@ -19,11 +19,20 @@ import AdminControlPanel from './components/AdminControlPanel';
 import LoginModal from './components/LoginModal';
 import SelfRegisterModal from './components/SelfRegisterModal';
 import PublicLandingView from './components/PublicLandingView';
-import defaultDb from '../server/data/db.json';
-import officialCatalogMap from '../server/data/official_mk_catalog_map.json';
+import defaultDbRaw from '../server/data/db.json';
+import officialCatalogMapRaw from '../server/data/official_mk_catalog_map.json';
 import { fetchAllVtexProductsClient, fetchVtexProductBySkuClient } from './services/vtexService';
 import { subscribeToAuth, logoutUser, isUserAdmin, ADMIN_EMAIL } from './services/firebase';
 import { saveToCloud, fetchFromCloud } from './services/cloudSync';
+
+const defaultDb = defaultDbRaw?.default || defaultDbRaw || {};
+const officialCatalogMap = officialCatalogMapRaw?.default || officialCatalogMapRaw || {};
+
+const safeArray = (arr, fallback = []) => {
+  if (Array.isArray(arr) && arr.length > 0) return arr;
+  if (Array.isArray(fallback) && fallback.length > 0) return fallback;
+  return Array.isArray(arr) ? arr : (Array.isArray(fallback) ? fallback : []);
+};
 
 const safeFetch = async (url, options) => {
   const isLocalBackend = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
@@ -34,18 +43,17 @@ const safeFetch = async (url, options) => {
 };
 
 const normalizeDb = (raw) => {
-  if (!raw || typeof raw !== 'object') return defaultDb;
+  const source = (raw && typeof raw === 'object') ? (raw.default || raw) : defaultDb;
   return {
-    ...defaultDb,
-    ...raw,
-    products: (Array.isArray(raw.products) && raw.products.length > 0) ? raw.products : defaultDb.products,
-    clients: Array.isArray(raw.clients) ? raw.clients : defaultDb.clients,
-    carts: Array.isArray(raw.carts) ? raw.carts : defaultDb.carts,
-    categories: (Array.isArray(raw.categories) && raw.categories.length > 0) ? raw.categories : defaultDb.categories,
-    consultants: (Array.isArray(raw.consultants) && raw.consultants.length > 0) ? raw.consultants : defaultDb.consultants,
-    settings: { ...defaultDb.settings, ...(raw.settings || {}) },
-    payments: Array.isArray(raw.payments) ? raw.payments : defaultDb.payments,
-    rewards: Array.isArray(raw.rewards) ? raw.rewards : defaultDb.rewards
+    consultant: source.consultant || defaultDb.consultant || null,
+    consultants: safeArray(source.consultants, defaultDb.consultants),
+    settings: { ...(defaultDb.settings || {}), ...(source.settings || {}) },
+    categories: safeArray(source.categories, defaultDb.categories),
+    products: safeArray(source.products, defaultDb.products),
+    clients: safeArray(source.clients, defaultDb.clients),
+    carts: safeArray(source.carts, defaultDb.carts),
+    payments: safeArray(source.payments, defaultDb.payments),
+    rewards: safeArray(source.rewards, defaultDb.rewards)
   };
 };
 

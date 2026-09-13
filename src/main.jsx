@@ -19,10 +19,11 @@ class ErrorBoundary extends Component {
 
   handleReset = () => {
     try {
-      localStorage.removeItem('vendas_marykay_cloud_master_db_v1');
-      localStorage.removeItem('mk_app_data');
+      localStorage.clear();
+      sessionStorage.clear();
     } catch (e) {}
-    window.location.reload();
+    this.setState({ hasError: false, error: null });
+    window.location.href = window.location.origin + window.location.pathname;
   };
 
   render() {
