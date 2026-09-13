@@ -20,9 +20,10 @@ export default function ClientQuoteModal({ cart, consultant, client, onClose }) 
 
   if (!cart) return null;
 
-  const subtotal = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const discountVal = (subtotal * (cart.discountPercent || 0)) / 100;
-  const total = Math.max(0, subtotal - discountVal + (cart.shippingFee || 0));
+  const numFmt = (n) => Number(n || 0).toFixed(2);
+  const subtotal = (cart.items || []).reduce((sum, item) => sum + (Number(item?.price || 0) * Number(item?.quantity || 1)), 0);
+  const discountVal = (subtotal * Number(cart?.discountPercent || 0)) / 100;
+  const total = Math.max(0, subtotal - discountVal + Number(cart?.shippingFee || 0));
 
   const validUntil = new Date();
   validUntil.setDate(validUntil.getDate() + 7);
@@ -33,30 +34,29 @@ export default function ClientQuoteModal({ cart, consultant, client, onClose }) 
   const sanitizedPhone = clientPhoneRaw.replace(/\D/g, '');
   const formattedPhoneForWa = sanitizedPhone.length >= 10 ? (sanitizedPhone.startsWith('55') ? sanitizedPhone : `55${sanitizedPhone}`) : '';
 
-  // Texto formatado para o WhatsApp da cliente
-  const generateWhatsAppText = () => {
-    let msg = `✨ *ORÇAMENTO DE LUXO MARY KAY®*\n`;
-    msg += `💖 *Consultora:* ${consultant?.name || "Mary Kay®"} (${consultant?.region || "Itajaí e região"})\n`;
+  const generateWhatsAppMessage = () => {
+    let msg = `✨ *ORÇAMENTO DE LUXO MARY KAY®* ✨\n\n`;
+    msg += `👩‍💼 *Consultora:* ${consultant?.name || 'Tailise'}\n`;
     msg += `👤 *Cliente:* ${cart.clientName}\n`;
     if (client?.street || client?.city) {
       msg += `📍 *Entrega:* ${client.street || ''} ${client.number || ''} ${client.neighborhood ? `- ${client.neighborhood}` : ''} (${client.city || 'Itajaí'})\n`;
     }
     msg += `----------------------------------------\n\n`;
 
-    cart.items.forEach(item => {
+    (cart.items || []).forEach(item => {
       msg += `▪️ *${item.name}*\n`;
-      msg += `   ${item.quantity}x R$ ${item.price.toFixed(2)} = R$ ${(item.price * item.quantity).toFixed(2)}\n`;
+      msg += `   ${item.quantity}x R$ ${numFmt(item.price)} = R$ ${numFmt(Number(item.price || 0) * Number(item.quantity || 1))}\n`;
     });
 
     msg += `\n----------------------------------------\n`;
-    msg += `Subtotal: R$ ${subtotal.toFixed(2)}\n`;
+    msg += `Subtotal: R$ ${numFmt(subtotal)}\n`;
     if (cart.discountPercent > 0) {
-      msg += `🎁 Desconto Especial (${cart.discountPercent}%): -R$ ${discountVal.toFixed(2)}\n`;
+      msg += `🎁 Desconto Especial (${cart.discountPercent}%): -R$ ${numFmt(discountVal)}\n`;
     }
     if (cart.shippingFee > 0) {
-      msg += `🚚 Entrega / Frete: R$ ${cart.shippingFee.toFixed(2)}\n`;
+      msg += `🚚 Entrega / Frete: R$ ${numFmt(cart.shippingFee)}\n`;
     }
-    msg += `💰 *TOTAL DO ORÇAMENTO: R$ ${total.toFixed(2)}*\n\n`;
+    msg += `💰 *TOTAL DO ORÇAMENTO: R$ ${numFmt(total)}*\n\n`;
     msg += `💳 *Formas de Pagamento:* Pix, Cartão de Crédito em até 3x ou Dinheiro.\n`;
     msg += `🔑 *Chave Pix:* ${consultant?.pixKey || "(47) 99999-8888"}\n\n`;
     msg += `Aguardamos sua confirmação para preparar seus produtos com todo carinho! 🥰`;
@@ -333,17 +333,17 @@ export default function ClientQuoteModal({ cart, consultant, client, onClose }) 
                       <div>
                         <h5 className="font-bold text-gray-900 text-xs">{item.name}</h5>
                         <p className="text-[10px] text-gray-400 mt-0.5">
-                          SKU #{item.sku} • R$ {item.price.toFixed(2)} cada
+                          SKU #{item.sku} • R$ {numFmt(item.price)} cada
                         </p>
                       </div>
                     </div>
 
                     <div className="text-right shrink-0">
                       <span className="text-[11px] font-bold text-gray-700 block">
-                        {item.quantity}x R$ {item.price.toFixed(2)}
+                        {item.quantity}x R$ {numFmt(item.price)}
                       </span>
                       <span className="text-xs font-extrabold text-[#B76E79] block mt-0.5">
-                        R$ {(item.price * item.quantity).toFixed(2)}
+                        R$ {numFmt(Number(item.price || 0) * Number(item.quantity || 1))}
                       </span>
                     </div>
                   </div>
@@ -355,20 +355,20 @@ export default function ClientQuoteModal({ cart, consultant, client, onClose }) 
             <div className="bg-[#FAF7F5] p-5 rounded-2xl border border-[#E899AC]/30 space-y-2 text-xs">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal dos Produtos:</span>
-                <span className="font-semibold">R$ {subtotal.toFixed(2)}</span>
+                <span className="font-semibold">R$ {numFmt(subtotal)}</span>
               </div>
 
               {cart.discountPercent > 0 && (
                 <div className="flex justify-between text-emerald-600 font-semibold">
                   <span>Desconto Especial ({cart.discountPercent}%):</span>
-                  <span>-R$ {discountVal.toFixed(2)}</span>
+                  <span>-R$ {numFmt(discountVal)}</span>
                 </div>
               )}
 
               {cart.shippingFee > 0 && (
                 <div className="flex justify-between text-gray-600">
                   <span>Taxa de Entrega / Frete:</span>
-                  <span className="font-semibold">R$ {cart.shippingFee.toFixed(2)}</span>
+                  <span className="font-semibold">R$ {numFmt(cart.shippingFee)}</span>
                 </div>
               )}
 
@@ -379,7 +379,7 @@ export default function ClientQuoteModal({ cart, consultant, client, onClose }) 
                 </div>
                 <div className="text-right">
                   <span className="text-2xl font-black text-[#B76E79] font-serif-mk block">
-                    R$ {total.toFixed(2)}
+                    R$ {numFmt(total)}
                   </span>
                 </div>
               </div>

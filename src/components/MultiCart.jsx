@@ -83,10 +83,11 @@ export default function MultiCart({
   };
 
   // Cálculos Financeiros
-  const subtotal = currentCart?.items.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0;
-  const totalCost = currentCart?.items.reduce((sum, item) => sum + ((item.costPrice || item.price * 0.6) * item.quantity), 0) || 0;
-  const discountVal = (subtotal * (currentCart?.discountPercent || 0)) / 100;
-  const totalFinal = Math.max(0, subtotal - discountVal + (currentCart?.shippingFee || 0));
+  const numFmt = (n) => Number(n || 0).toFixed(2);
+  const subtotal = (currentCart?.items || []).reduce((sum, item) => sum + (Number(item?.price || 0) * Number(item?.quantity || 1)), 0);
+  const totalCost = (currentCart?.items || []).reduce((sum, item) => sum + ((Number(item?.costPrice) || Number(item?.price || 0) * 0.6) * Number(item?.quantity || 1)), 0);
+  const discountVal = (subtotal * Number(currentCart?.discountPercent || 0)) / 100;
+  const totalFinal = Math.max(0, subtotal - discountVal + Number(currentCart?.shippingFee || 0));
   const estimatedProfit = totalFinal - totalCost;
 
   const filteredProducts = (products || []).filter(p => {
@@ -291,7 +292,7 @@ export default function MultiCart({
                         <div>
                           <h4 className="text-xs font-bold text-gray-900 leading-tight">{item.name}</h4>
                           <span className="text-[10px] text-gray-400">SKU: {item.sku}</span>
-                          <div className="text-xs font-semibold text-[#B76E79]">R$ {item.price.toFixed(2)}</div>
+                          <div className="text-xs font-semibold text-[#B76E79]">R$ {numFmt(item.price)}</div>
                         </div>
                       </div>
 
@@ -313,7 +314,7 @@ export default function MultiCart({
                         </div>
 
                         <span className="text-xs font-bold text-gray-900 w-16 text-right">
-                          R$ {(item.price * item.quantity).toFixed(2)}
+                          R$ {numFmt(item.price * item.quantity)}
                         </span>
 
                         <button
@@ -370,15 +371,15 @@ export default function MultiCart({
               <div className="grid grid-cols-3 gap-2 text-center py-1">
                 <div className="bg-gray-900/60 p-2.5 rounded-xl border border-gray-800">
                   <span className="text-[10px] text-gray-400 block">Total Cliente</span>
-                  <span className="text-sm font-bold text-white">R$ {totalFinal.toFixed(2)}</span>
+                  <span className="text-sm font-bold text-white">R$ {numFmt(totalFinal)}</span>
                 </div>
                 <div className="bg-gray-900/60 p-2.5 rounded-xl border border-gray-800">
                   <span className="text-[10px] text-gray-400 block">Seu Custo Estimado</span>
-                  <span className="text-sm font-bold text-gray-300">R$ {totalCost.toFixed(2)}</span>
+                  <span className="text-sm font-bold text-gray-300">R$ {numFmt(totalCost)}</span>
                 </div>
                 <div className="bg-emerald-900/40 p-2.5 rounded-xl border border-emerald-700/50">
                   <span className="text-[10px] text-emerald-300 block">Seu Lucro Líquido</span>
-                  <span className="text-base font-bold text-emerald-400">R$ {estimatedProfit.toFixed(2)}</span>
+                  <span className="text-base font-bold text-emerald-400">R$ {numFmt(estimatedProfit)}</span>
                 </div>
               </div>
             </div>
@@ -411,7 +412,7 @@ export default function MultiCart({
                       <div>
                         <h4 className="text-xs font-semibold text-gray-900 leading-tight">{product.name}</h4>
                         <span className="text-[10px] text-gray-400">{product.category}</span>
-                        <div className="text-xs font-bold text-[#B76E79]">R$ {product.price.toFixed(2)}</div>
+                        <div className="text-xs font-bold text-[#B76E79]">R$ {numFmt(product.price)}</div>
                       </div>
                     </div>
 
