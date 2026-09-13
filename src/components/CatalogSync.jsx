@@ -218,7 +218,7 @@ export default function CatalogSync({
         </button>
       </div>
 
-      {/* FERRAMENTA PRINCIPAL: BUSCA POR CÓDIGO SKU NO SITE OFICIAL */}
+      {/* FERRAMENTA PRINCIPAL: BUSCA POR CÓDIGO SKU NA API PÚBLICA VTEX */}
       <div className="bg-[#1A1A1A] text-white p-5 rounded-2xl shadow-md space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -226,11 +226,16 @@ export default function CatalogSync({
               <Globe className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-sm font-serif-mk text-white">
-                Buscar Qualquer Código SKU no Site Oficial Mary Kay®
-              </h3>
-              <p className="text-[11px] text-gray-400">
-                Se o produto não estiver no catálogo abaixo, digite o código oficial (ex: 101902) e o robô puxa e cadastra pra você na hora!
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-sm font-serif-mk text-white">
+                  Buscar Código SKU na API Pública VTEX (loja.marykay.com.br)
+                </h3>
+                <span className="bg-emerald-950 text-emerald-400 border border-emerald-700/60 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  VTEX API ⚡
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                Digite qualquer código oficial (ex: 10142659) para puxar diretamente da loja online oficial Mary Kay® Brasil em tempo real!
               </p>
             </div>
           </div>

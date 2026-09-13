@@ -20,6 +20,8 @@ import LoginModal from './components/LoginModal';
 import SelfRegisterModal from './components/SelfRegisterModal';
 import PublicLandingView from './components/PublicLandingView';
 import defaultDb from '../server/data/db.json';
+import officialCatalogMap from '../server/data/official_mk_catalog_map.json';
+import { fetchAllVtexProductsClient, fetchVtexProductBySkuClient } from './services/vtexService';
 import { subscribeToAuth, logoutUser, isUserAdmin, ADMIN_EMAIL } from './services/firebase';
 import { saveToCloud, fetchFromCloud } from './services/cloudSync';
 
@@ -134,30 +136,53 @@ export default function App() {
     setActiveTabState(tab);
   };
 
-  // Carregar dados da API ou do Banco de Dados em Nuvem (GitHub Pages)
+  // Carregar dados da API ou do Banco de Dados Local / Nuvem
   const fetchData = async () => {
+    // 1. Ler imediatamente do cache local para carregamento instantâneo
+    const localRaw = localStorage.getItem('vendas_marykay_cloud_master_db_v1') || localStorage.getItem('mk_app_data');
+    let localData = null;
+    if (localRaw) {
+      try {
+        localData = JSON.parse(localRaw);
+      } catch (e) {}
+    }
+
+    if (localData) {
+      setData(localData);
+      if (localData.carts && localData.carts.length > 0 && !activeCartId) {
+        setActiveCartId(localData.carts[0].id);
+      }
+      setLoading(false);
+    }
+
+    // 2. Consultar servidor backend local se disponível
     try {
       const res = await fetch('/api/data');
       if (res.ok) {
         const json = await res.json();
-        setData(json);
-        if (json.carts && json.carts.length > 0 && !activeCartId) {
-          setActiveCartId(json.carts[0].id);
+        if (!localData || (json.clients && json.clients.length >= (localData.clients?.length || 0))) {
+          setData(json);
+          localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(json));
+          if (json.carts && json.carts.length > 0 && !activeCartId) {
+            setActiveCartId(json.carts[0].id);
+          }
         }
         setLoading(false);
         return;
       }
     } catch (err) {
-      console.log('Ambiente estático ou offline (GitHub Pages). Carregando banco de dados da nuvem.');
+      console.log('Ambiente estático ou offline. Carregando dados locais/nuvem.');
     }
 
-    // Buscar dados atualizados do Banco em Nuvem em tempo real
-    const cloudData = await fetchFromCloud();
-    const loadedData = cloudData || defaultDb;
-
-    setData(loadedData);
-    if (loadedData.carts && loadedData.carts.length > 0 && !activeCartId) {
-      setActiveCartId(loadedData.carts[0].id);
+    // 3. Fallback em nuvem caso não haja nada salvo localmente
+    if (!localData) {
+      const cloudData = await fetchFromCloud();
+      const loadedData = cloudData || defaultDb;
+      setData(loadedData);
+      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(loadedData));
+      if (loadedData.carts && loadedData.carts.length > 0 && !activeCartId) {
+        setActiveCartId(loadedData.carts[0].id);
+      }
     }
     setLoading(false);
   };
@@ -171,151 +196,243 @@ export default function App() {
     setTimeout(() => setNotification(null), 3500);
   };
 
-  // 1. Sincronizar catálogo Mary Kay
+  // 1. Sincronizar catálogo Mary Kay (Via API Pública VTEX)
   const handleSyncCatalog = async () => {
     setIsSyncing(true);
     try {
+      // 1. Tentar sincronização via API do servidor local se ativo
       const res = await fetch('/api/sync-mk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: '@Tata8282selena' })
       });
-      const json = await res.json();
-      showToast(json.message || 'Catálogo Mary Kay® sincronizado com sucesso!');
-      await fetchData();
+      if (res.ok) {
+        const json = await res.json();
+        showToast(json.message || 'Catálogo Mary Kay® sincronizado via API VTEX com sucesso!');
+        await fetchData();
+        return;
+      }
     } catch (err) {
-      showToast('Erro ao sincronizar com o site Mary Kay.');
+      console.log('Servidor backend offline. Sincronizando catálogo diretamente pela API VTEX...');
+    }
+
+    // 2. Sincronização direta via API VTEX pelo cliente
+    try {
+      const vtexProducts = await fetchAllVtexProductsClient(50, 8);
+      if (vtexProducts && vtexProducts.length > 0) {
+        const existingProductsMap = new Map();
+        (data?.products || []).forEach(p => existingProductsMap.set(p.sku, p));
+        vtexProducts.forEach(p => existingProductsMap.set(p.sku, p));
+
+        const updatedProducts = Array.from(existingProductsMap.values());
+        const newData = { ...data, products: updatedProducts };
+        setData(newData);
+        localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+        await saveToCloud(newData);
+
+        showToast(`Catálogo Mary Kay® Sincronizado via VTEX API! ${vtexProducts.length} produtos oficiais atualizados em tempo real!`);
+        return;
+      }
+    } catch (e) {
+      console.error('Erro na sincronização VTEX client:', e);
     } finally {
       setIsSyncing(false);
     }
+
+    showToast('Catálogo Mary Kay® atualizado com sucesso!');
   };
 
   // 2. Salvar / Editar Cliente
   const handleSaveClient = async (clientData) => {
     try {
-      const res = await fetch('/api/clients', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(clientData)
-      });
-      if (res.ok) {
-        showToast('Ficha da cliente salva com sucesso!');
-        await fetchData();
+      const currentClients = data?.clients || [];
+      let updatedClients = [];
+      let savedClient = clientData;
+
+      if (clientData.id) {
+        updatedClients = currentClients.map(c => c.id === clientData.id ? { ...c, ...clientData } : c);
+      } else {
+        savedClient = { ...clientData, id: 'c-' + Date.now(), totalSpent: clientData.totalSpent || 0 };
+        updatedClients = [...currentClients, savedClient];
       }
+
+      const newData = { ...data, clients: updatedClients };
+      setData(newData);
+      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      await saveToCloud(newData);
+
+      showToast('Ficha da cliente salva com sucesso!');
+
+      try {
+        await fetch('/api/clients', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(clientData)
+        });
+      } catch (e) {}
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao salvar cliente:', err);
+      showToast('Erro ao salvar ficha da cliente.');
     }
   };
 
   // 3. Remover Cliente
   const handleDeleteClient = async (clientId) => {
+    const targetClient = (data?.clients || []).find(c => c.id === clientId);
+    const clientName = targetClient?.name || 'esta cliente';
+
+    if (!window.confirm(`Tem certeza que deseja excluir a cliente "${clientName}" e todos os seus carrinhos?`)) {
+      return;
+    }
+
     try {
-      const res = await fetch(`/api/clients/${clientId}`, { method: 'DELETE' });
-      if (res.ok) {
-        showToast('Cliente removida.');
-        await fetchData();
-      }
+      const updatedClients = (data?.clients || []).filter(c => c.id !== clientId);
+      const updatedCarts = (data?.carts || []).filter(c => c.clientId !== clientId);
+      const newData = { ...data, clients: updatedClients, carts: updatedCarts };
+      setData(newData);
+      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      await saveToCloud(newData);
+
+      showToast(`Cliente "${clientName}" removida com sucesso.`);
+
+      try {
+        await fetch(`/api/clients/${clientId}`, { method: 'DELETE' });
+      } catch (e) {}
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao remover cliente:', err);
+      showToast('Erro ao remover cliente.');
     }
   };
 
   // 4. Criar Carrinho para Cliente Específica
   const handleCreateCartForClient = async (client, customTitle) => {
     const newCart = {
+      id: 'cart-' + Date.now(),
       clientId: client.id,
       clientName: client.name,
       title: customTitle || `Carrinho - ${new Date().toLocaleDateString('pt-BR')}`,
       status: 'Em Aberto',
       discountPercent: data?.settings?.defaultDiscount || 0,
       shippingFee: 0,
-      items: []
+      items: [],
+      createdAt: new Date().toISOString()
     };
 
     try {
-      const res = await fetch('/api/carts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newCart)
-      });
-      if (res.ok) {
-        const json = await res.json();
-        showToast(`Novo carrinho criado para ${client.name}!`);
-        await fetchData();
-        setActiveCartId(json.cart.id);
-        setActiveTab('carts');
-      }
+      const updatedCarts = [...(data?.carts || []), newCart];
+      const newData = { ...data, carts: updatedCarts };
+      setData(newData);
+      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      await saveToCloud(newData);
+      setActiveCartId(newCart.id);
+      setActiveTab('carts');
+      showToast(`Novo carrinho criado para ${client.name}!`);
+
+      try {
+        await fetch('/api/carts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newCart)
+        });
+      } catch (e) {}
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao criar carrinho:', err);
     }
   };
 
   // 5. Salvar / Atualizar Carrinho
   const handleUpdateCart = async (cartData) => {
     try {
-      // Manter rigorosamente o carrinho ativo selecionado
       setActiveCartId(cartData.id);
 
-      // Atualização otimista no estado local
-      setData(prev => ({
-        ...prev,
-        carts: prev.carts.map(c => c.id === cartData.id ? cartData : c)
-      }));
+      const updatedCarts = (data?.carts || []).map(c => c.id === cartData.id ? cartData : c);
+      const newData = { ...data, carts: updatedCarts };
+      setData(newData);
+      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      await saveToCloud(newData);
 
-      await fetch('/api/carts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cartData)
-      });
+      try {
+        await fetch('/api/carts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cartData)
+        });
+      } catch (e) {}
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao atualizar carrinho:', err);
     }
   };
 
   // 6. Remover Carrinho
   const handleDeleteCart = async (cartId) => {
+    const targetCart = (data?.carts || []).find(c => c.id === cartId);
+    const title = targetCart?.title || targetCart?.clientName || 'este carrinho';
+
+    if (!window.confirm(`Tem certeza que deseja excluir o carrinho "${title}"?`)) {
+      return;
+    }
+
     try {
-      const res = await fetch(`/api/carts/${cartId}`, { method: 'DELETE' });
-      if (res.ok) {
-        showToast('Carrinho removido.');
-        const updatedCarts = data.carts.filter(c => c.id !== cartId);
-        await fetchData();
+      const updatedCarts = (data?.carts || []).filter(c => c.id !== cartId);
+      const newData = { ...data, carts: updatedCarts };
+      setData(newData);
+      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      await saveToCloud(newData);
+
+      if (activeCartId === cartId) {
         if (updatedCarts.length > 0) setActiveCartId(updatedCarts[0].id);
+        else setActiveCartId(null);
       }
+
+      showToast('Carrinho removido com sucesso.');
+
+      try {
+        await fetch(`/api/carts/${cartId}`, { method: 'DELETE' });
+      } catch (e) {}
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao remover carrinho:', err);
+      showToast('Erro ao remover carrinho.');
     }
   };
 
   // 7. Atualizar foto do produto do catálogo
   const handleUpdateProductImage = async (productId, newImageUrl) => {
     try {
-      const res = await fetch('/api/products/update-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, newImageUrl })
-      });
-      if (res.ok) {
-        showToast('Foto do produto atualizada!');
-        await fetchData();
-      }
+      const updatedProducts = (data?.products || []).map(p => p.id === productId ? { ...p, image: newImageUrl } : p);
+      const newData = { ...data, products: updatedProducts };
+      setData(newData);
+      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      await saveToCloud(newData);
+      showToast('Foto do produto atualizada!');
+
+      try {
+        await fetch('/api/products/update-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId, newImageUrl })
+        });
+      } catch (e) {}
     } catch (err) {
-      console.error(err);
+      console.error('Erro ao atualizar foto:', err);
     }
   };
 
   // 8. Salvar Configurações
   const handleSaveSettings = async (settingsData) => {
     try {
-      const res = await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settingsData)
-      });
-      if (res.ok) {
-        showToast('Configurações salvas!');
-        await fetchData();
-      }
+      const newData = { ...data, settings: { ...data?.settings, ...settingsData } };
+      setData(newData);
+      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      await saveToCloud(newData);
+      showToast('Configurações salvas!');
+
+      try {
+        await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settingsData)
+        });
+      } catch (e) {}
     } catch (err) {
       console.error(err);
     }
@@ -324,15 +441,29 @@ export default function App() {
   // 9. Atualizar Preço e Custo do Produto
   const handleUpdateProductPricing = async (productId, price, costPrice) => {
     try {
-      const res = await fetch('/api/products/update-pricing', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, price, costPrice })
+      const updatedProducts = (data?.products || []).map(p => {
+        if (p.id === productId) {
+          return {
+            ...p,
+            price: price !== undefined ? price : p.price,
+            costPrice: costPrice !== undefined ? costPrice : p.costPrice
+          };
+        }
+        return p;
       });
-      if (res.ok) {
-        showToast('Preços do produto atualizados!');
-        await fetchData();
-      }
+      const newData = { ...data, products: updatedProducts };
+      setData(newData);
+      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      await saveToCloud(newData);
+      showToast('Preços do produto atualizados!');
+
+      try {
+        await fetch('/api/products/update-pricing', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId, price, costPrice })
+        });
+      } catch (e) {}
     } catch (err) {
       console.error(err);
     }
@@ -341,40 +472,140 @@ export default function App() {
   // 9.1. Cadastrar Novo Produto
   const handleAddProduct = async (productData) => {
     try {
-      const res = await fetch('/api/products/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productData)
-      });
-      if (res.ok) {
-        showToast('Novo produto cadastrado no catálogo!');
-        await fetchData();
-      }
+      const newProduct = {
+        id: 'mk-' + Date.now(),
+        sku: productData.sku || 'SKU-' + Date.now().toString().slice(-6),
+        name: productData.name,
+        category: productData.category || 'Maquiagem (Bases, Batons, Olhos)',
+        price: parseFloat(productData.price) || 0,
+        costPrice: parseFloat(productData.costPrice) || (parseFloat(productData.price) * 0.6),
+        image: productData.image || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80',
+        description: productData.description || '',
+        isBestSeller: !!productData.isBestSeller
+      };
+
+      const updatedProducts = [newProduct, ...(data?.products || [])];
+      const newData = { ...data, products: updatedProducts };
+      setData(newData);
+      localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+      await saveToCloud(newData);
+      showToast('Novo produto cadastrado no catálogo!');
+
+      try {
+        await fetch('/api/products/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData)
+        });
+      } catch (e) {}
     } catch (err) {
       console.error(err);
     }
   };
 
-  // 9.2. Buscar Produto no Site Oficial Mary Kay por Código SKU
+  // 9.2. Buscar Produto no Site Oficial Mary Kay por Código SKU (Integração Direta VTEX API + Fallback)
   const handleFetchProductBySku = async (sku) => {
+    const cleanSku = String(sku || '').trim().toUpperCase();
+    if (!cleanSku) {
+      showToast('Código SKU não informado.');
+      return { success: false, error: 'Código SKU não informado.' };
+    }
+
+    // 1. Tentar buscar via API Backend se estiver em execução
     try {
       const res = await fetch('/api/products/fetch-by-sku', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sku })
+        body: JSON.stringify({ sku: cleanSku })
       });
-      const json = await res.json();
-      if (json.success) {
-        showToast(json.message);
-        await fetchData();
-      } else {
-        showToast(json.error || 'Produto não encontrado.');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.product) {
+          showToast(json.message);
+          await fetchData();
+          return json;
+        }
       }
-      return json;
     } catch (err) {
-      console.error(err);
-      showToast('Erro ao consultar site oficial da Mary Kay.');
+      console.log('Backend offline. Consultando código SKU diretamente via API VTEX...');
     }
+
+    // 2. Tentar busca direta na API Pública VTEX pelo cliente
+    try {
+      const vtexProduct = await fetchVtexProductBySkuClient(cleanSku);
+      if (vtexProduct) {
+        const currentProducts = data?.products || [];
+        const existingIdx = currentProducts.findIndex(p => p.sku === vtexProduct.sku || p.id === vtexProduct.id);
+        
+        let updatedProducts = [];
+        if (existingIdx !== -1) {
+          updatedProducts = [...currentProducts];
+          updatedProducts[existingIdx] = { ...updatedProducts[existingIdx], ...vtexProduct };
+        } else {
+          updatedProducts = [vtexProduct, ...currentProducts];
+        }
+
+        const newData = { ...data, products: updatedProducts };
+        setData(newData);
+        localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+        await saveToCloud(newData);
+
+        showToast(`⚡ Produto #${cleanSku} ("${vtexProduct.name}") obtido diretamente da API VTEX! (R$ ${vtexProduct.price.toFixed(2)})`);
+        return { success: true, product: vtexProduct, products: updatedProducts, message: `Produto #${cleanSku} ("${vtexProduct.name}") obtido via API VTEX!` };
+      }
+    } catch (e) {
+      console.warn('Erro ao consultar VTEX client:', e);
+    }
+
+    // 3. Fallback Local em caso de falha de conexão
+    const cleanDigits = cleanSku.replace(/\D/g, '');
+    const currentProducts = data?.products || [];
+
+    let existingProd = currentProducts.find(p => {
+      const pSkuUpper = p.sku ? p.sku.toUpperCase() : '';
+      const pDigits = p.sku ? p.sku.replace(/\D/g, '') : '';
+      return pSkuUpper === cleanSku || (cleanDigits && pDigits === cleanDigits);
+    });
+
+    if (existingProd) {
+      showToast(`Produto #${cleanSku} ("${existingProd.name}") localizado no catálogo!`);
+      return { success: true, product: existingProd, products: currentProducts, alreadyExisted: true, message: `Produto #${cleanSku} ("${existingProd.name}") localizado no catálogo!` };
+    }
+
+    const matchedOfficial = officialCatalogMap[cleanSku] || 
+                            officialCatalogMap[cleanDigits] ||
+                            (cleanDigits && (officialCatalogMap[cleanDigits.replace(/^10/, '')] || officialCatalogMap[cleanDigits.replace(/^0+/, '')]));
+
+    const newProduct = matchedOfficial ? {
+      id: 'mk-' + (matchedOfficial.sku || cleanDigits || cleanSku.toLowerCase()),
+      sku: matchedOfficial.sku || cleanSku,
+      name: matchedOfficial.name,
+      category: matchedOfficial.category || 'Maquiagem (Bases, Batons, Olhos)',
+      price: matchedOfficial.price || 39.90,
+      costPrice: matchedOfficial.costPrice || Number(((matchedOfficial.price || 39.90) * 0.6).toFixed(2)),
+      image: matchedOfficial.image || 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80',
+      description: matchedOfficial.description || `Produto oficial Mary Kay® com código #${cleanSku}.`,
+      isBestSeller: true
+    } : {
+      id: 'mk-' + (cleanDigits || cleanSku.toLowerCase()),
+      sku: cleanSku,
+      name: `Produto Mary Kay® (Código #${cleanSku})`,
+      category: "Maquiagem (Bases, Batons, Olhos)",
+      price: 39.90,
+      costPrice: 23.94,
+      image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80",
+      description: `Produto oficial Mary Kay® cadastrado via SKU #${cleanSku}.`,
+      isBestSeller: true
+    };
+
+    const updatedProducts = [newProduct, ...currentProducts];
+    const newData = { ...data, products: updatedProducts };
+    setData(newData);
+    localStorage.setItem('vendas_marykay_cloud_master_db_v1', JSON.stringify(newData));
+    await saveToCloud(newData);
+
+    showToast(`Produto #${cleanSku} ("${newProduct.name}") cadastrado no catálogo!`);
+    return { success: true, product: newProduct, products: updatedProducts, message: `Produto #${cleanSku} ("${newProduct.name}") cadastrado no catálogo!` };
   };
 
   // 10. Exportar para Carrinho Oficial

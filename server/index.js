@@ -156,7 +156,11 @@ app.post('/api/clients', (req, res) => {
     
     if (newClient.id) {
       const idx = db.clients.findIndex(c => c.id === newClient.id);
-      if (idx !== -1) db.clients[idx] = newClient;
+      if (idx !== -1) {
+        db.clients[idx] = { ...db.clients[idx], ...newClient };
+      } else {
+        db.clients.push(newClient);
+      }
     } else {
       newClient.id = 'c-' + Date.now();
       newClient.totalSpent = 0;
@@ -218,58 +222,42 @@ app.delete('/api/carts/:id', (req, res) => {
   }
 });
 
-// 7. Sincronizar com o Portal Mary Kay (Importar todos os 604 produtos do catálogo oficial)
+// 7. Sincronizar com o Portal Mary Kay (Via API Pública VTEX em Tempo Real)
 app.post('/api/sync-mk', async (req, res) => {
   try {
     const db = readDb();
-    const mapPath = path.join(__dirname, 'data', 'official_mk_catalog_map.json');
+    const result = await syncMaryKayCatalog(db.consultant?.code || 'NW7527', req.body.password || '@Tata8282selena');
+    
+    if (result && result.products && result.products.length > 0) {
+      const existingMap = new Map();
+      (db.products || []).forEach(p => existingMap.set(p.sku, p));
 
-    if (fs.existsSync(mapPath)) {
-      const fullCatalogMap = JSON.parse(fs.readFileSync(mapPath, 'utf-8'));
-      let addedCount = 0;
-      let updatedCount = 0;
-
-      Object.keys(fullCatalogMap).forEach(sku => {
-        const officialItem = fullCatalogMap[sku];
-        const existingIndex = db.products.findIndex(p => p.sku === officialItem.sku || (p.sku && p.sku.replace(/\D/g, '') === officialItem.sku.replace(/\D/g, '')));
-        
-        if (existingIndex !== -1) {
-          // Preservar estoque e personalizações da consultora, atualizando nome, categoria e preços oficiais
-          db.products[existingIndex] = {
-            ...db.products[existingIndex],
-            name: officialItem.name,
-            category: officialItem.category,
-            price: officialItem.price,
-            costPrice: officialItem.costPrice,
-            image: officialItem.image || db.products[existingIndex].image
-          };
-          updatedCount++;
-        } else {
-          // Adiciona novo produto oficial ao catálogo da consultora
-          db.products.push({
-            id: 'mk-' + officialItem.sku.toLowerCase(),
-            sku: officialItem.sku,
-            name: officialItem.name,
-            category: officialItem.category,
-            price: officialItem.price,
-            costPrice: officialItem.costPrice,
-            image: officialItem.image,
-            description: officialItem.description,
-            isBestSeller: false
+      result.products.forEach(p => {
+        const existing = existingMap.get(p.sku);
+        if (existing) {
+          existingMap.set(p.sku, {
+            ...existing,
+            name: p.name,
+            category: p.category,
+            price: p.price,
+            costPrice: p.costPrice,
+            image: p.image || existing.image
           });
-          addedCount++;
+        } else {
+          existingMap.set(p.sku, p);
         }
       });
 
+      db.products = Array.from(existingMap.values());
       writeDb(db);
+
       return res.json({
         success: true,
-        message: `Catálogo Mary Kay® 100% Sincronizado! ${addedCount} novos produtos adicionados. Total: ${db.products.length} produtos no seu catálogo!`,
+        message: `Catálogo Mary Kay® 100% Sincronizado via VTEX API! Total: ${db.products.length} produtos oficiais atualizados!`,
         products: db.products
       });
     }
 
-    const result = await syncMaryKayCatalog(db.consultant.code, req.body.password || '@Tata8282selena');
     res.json(result);
   } catch (error) {
     console.error('Erro na sincronização:', error);

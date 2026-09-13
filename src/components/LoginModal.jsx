@@ -137,65 +137,6 @@ export default function LoginModal({ isOpen, onClose, currentUser, onLoginSucces
               <span>{loading ? 'Conectando ao Google...' : '🔑 Entrar com o Google (Popup)'}</span>
             </button>
 
-            {/* Opções de Seleção de Conta Garantidas */}
-            <div className="space-y-3 pt-2 border-t border-gray-100">
-              <label className="text-[11px] font-bold text-gray-700 block uppercase tracking-wider">
-                Seleção de Conta para Acesso:
-              </label>
-
-              <div className="grid grid-cols-1 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleSelectUser(loginWithGoogleEmail('tailiseroza@gmail.com'))}
-                  className="w-full bg-[#FAF7F5] hover:bg-[#F8E8E8] text-gray-900 font-bold p-3 rounded-xl border border-gray-200 hover:border-[#E899AC] transition-all flex items-center justify-between text-xs cursor-pointer group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <UserCheck className="w-4 h-4 text-[#B76E79]" />
-                    <div className="text-left">
-                      <span className="font-bold text-gray-900 block text-xs">tailiseroza@gmail.com</span>
-                      <span className="text-[10px] text-gray-500 block">Consultora Tailise</span>
-                    </div>
-                  </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#B76E79]" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleSelectUser(loginWithGoogleEmail(ADMIN_EMAIL))}
-                  className="w-full bg-[#FAF7F5] hover:bg-amber-50 text-gray-900 font-bold p-3 rounded-xl border border-gray-200 hover:border-amber-400 transition-all flex items-center justify-between text-xs cursor-pointer group"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <ShieldCheck className="w-4 h-4 text-amber-600" />
-                    <div className="text-left">
-                      <span className="font-bold text-gray-900 block text-xs">{ADMIN_EMAIL}</span>
-                      <span className="text-[10px] text-amber-700 block">Administrador Master</span>
-                    </div>
-                  </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-gray-400 group-hover:text-amber-600" />
-                </button>
-              </div>
-
-              {/* Digitar outro e-mail sem validação HTML5 intrusiva */}
-              <form onSubmit={handleCustomEmailSubmit} className="pt-1 flex items-center gap-2">
-                <div className="relative flex-1">
-                  <Mail className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-2.5" />
-                  <input
-                    type="email"
-                    value={customEmail}
-                    onChange={(e) => setCustomEmail(e.target.value)}
-                    placeholder="Outro e-mail do Google..."
-                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-xl text-xs outline-none focus:border-[#E899AC]"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="bg-gray-900 hover:bg-gray-800 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition-all shrink-0 cursor-pointer"
-                >
-                  Entrar
-                </button>
-              </form>
-            </div>
-
           </div>
         )}
 
